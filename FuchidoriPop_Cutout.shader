@@ -1,4 +1,7 @@
-﻿Shader "FuchidoriPopToon/Cutout"
+﻿// Copyright (c) 2024 JohnTonarino
+// Released under the MIT license
+// FuchidoriPopToon v 1.0.0
+Shader "FuchidoriPopToon/Cutout"
 {
     Properties
     {
@@ -610,8 +613,8 @@
                 fixed4 emissiveTex = tex2D(_EmissiveTex, i.uv);
                 col.rgb += emissiveTex.rgb * _EmissiveColor;
 
-                col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);
                 col.rgb *= lerp(1., 1.+phoneSpec, _SpecularStrength);
+                col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);
 
                 fixed3 albedo = col.rgb;
 #if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH
@@ -678,8 +681,8 @@
                 fixed4 emissiveTex = tex2D(_EmissiveTex, i.uv);
                 col.rgb += emissiveTex.rgb * _EmissiveColor;
 
-                col.rgb *= lerp(0., OPENLIT_LIGHT_COLOR, factor*attenuation);
                 col.rgb *= lerp(1., 1.+phoneSpec, _SpecularStrength);
+                col.rgb *= lerp(0., OPENLIT_LIGHT_COLOR, factor*attenuation);
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
 
