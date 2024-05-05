@@ -600,7 +600,8 @@
                 fixed4 matcap = tex2D(_MatCap, i.viewUV) * tex2D(_MatCapMask, i.uv);
                 col.rgb = lerp(col.rgb, matcap.rgb, _MatCapStrength);
 
-                col = drawRimLighting(i.uv, i.screenPos, viewDir, i.normalWS) > 0. ? _RimColor : col;
+                fixed rim = drawRimLighting(i.uv, i.screenPos, viewDir, i.normalWS);
+                col.rgb = lerp(col.rgb, _RimColor.rgb, rim);
 
                 fixed4 alphaMask = tex2D(_TransparentMask, i.uv);
                 col.a = col.a * OpenLitGray(alphaMask.rgb);
@@ -667,7 +668,8 @@
                 fixed4 matcap = tex2D(_MatCap, i.viewUV) * tex2D(_MatCapMask, i.uv);
                 col.rgb = lerp(col.rgb, matcap.rgb, _MatCapStrength);
 
-                col = drawRimLighting(i.uv, i.screenPos, viewDir, i.normalWS) > 0. ? _RimColor : col;
+                fixed rim = drawRimLighting(i.uv, i.screenPos, viewDir, i.normalWS);
+                col.rgb = lerp(col.rgb, _RimColor.rgb, rim);
 
                 fixed4 alphaMask = tex2D(_TransparentMask, i.uv);
                 col.a = col.a * OpenLitGray(alphaMask.rgb);
