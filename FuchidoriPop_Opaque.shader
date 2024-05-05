@@ -34,7 +34,7 @@
         [Space(10)]
         _RimColor("RimLightColor", Color) = (1., 1., 1., 1.)
         _RimLightStrength("RimLightStrength", Range(0., 1.)) = .5
-        _RimLightMask("RimLightMask", 2D) = "black" {}
+        _RimLightMask("RimLightMask", 2D) = "white" {}
 
         [Header(Outline)]
         [Space(10)]
