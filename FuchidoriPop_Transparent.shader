@@ -473,7 +473,8 @@ Shader "FuchidoriPopToon/Transparent"
 
         float4 calcOutlineVertex(appdata v, fixed width){
             float3 norm = normalize(mul((float3x3)UNITY_MATRIX_IT_MV, v.normalOS));
-            float2 offset = TransformViewToProjection(norm.xy);
+            fixed4 outlineMask = tex2Dlod(_OutlineMask, float4(v.uv.xy, 0., 0.));
+            float2 offset = TransformViewToProjection(norm.xy)*outlineMask.r;
 
             float4 outline_vertex = UnityObjectToClipPos(v.vertex);
             outline_vertex.xy += (offset * width);
