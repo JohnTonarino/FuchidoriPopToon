@@ -8,6 +8,8 @@ VRChatでの使用を想定したアウトラインにこだわりのあるシ�
 https://github.com/lilxyzw/OpenLit
 
 2024/05/05 1.0.0 リリース
+2024/05/06 1.0.1 OutlineMaskが有効になっていなかった不具合を修正。Outlineだけに対してLightの影響度を調整できるパラメータAsOutlineUnlitを追加。
+
 
 # 利用規約
 MITライセンスで公開しています。
