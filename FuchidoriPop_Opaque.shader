@@ -49,6 +49,7 @@ Shader "FuchidoriPopToon/Opaque"
         _OuterOutlineRatio("OuterOutlineRatio", Range(.01, 1.)) = .3
         _InnerOutlineWidth("InnerOutlineWidth", Float) = .0015
         _OutlineMask("OutlineMask", 2D) = "white" {}
+        _AsOutlineUnlit("As OutlineUnlit", Range(0,1)) = 0.5
 
         [Header(Transparent)]
         [Space(10)]
@@ -414,6 +415,7 @@ Shader "FuchidoriPopToon/Opaque"
         fixed _InnerOutlineWidth;
         half   _OutlineWidth;
         sampler2D _OutlineMask;
+        half   _AsOutlineUnlit;
 
         sampler2D _TransparentMask;
         half _TransparentLevel;
@@ -512,6 +514,13 @@ Shader "FuchidoriPopToon/Opaque"
             o.vertexLight = min(o.vertexLight, _LightMaxLimit);
 #endif
 
+            return o;
+        }
+        g2f vert_normalbase(appdata v)
+        {
+            g2f o;
+            o = vert_base(v);
+
             // [OpenLit] Calculate and copy light datas
             OpenLitLightDatas lightDatas;
             ComputeLights(lightDatas, _LightDirectionOverride);
@@ -525,6 +534,13 @@ Shader "FuchidoriPopToon/Opaque"
             g2f o;
             o = vert_base(v);
             o.pos = calcOutlineVertex(v, width);
+
+            // [OpenLit] Calculate and copy light datas
+            OpenLitLightDatas lightDatas;
+            ComputeLights(lightDatas, _LightDirectionOverride);
+            CorrectLights(lightDatas, _LightMinLimit, _LightMaxLimit, _MonochromeLighting, _AsOutlineUnlit);
+            PackLightDatas(o.lightDatas, lightDatas);
+
             return o;
         }
         
@@ -568,7 +584,7 @@ Shader "FuchidoriPopToon/Opaque"
             Blend SrcAlpha OneMinusSrcAlpha
 
             CGPROGRAM
-            #pragma vertex vert_base
+            #pragma vertex vert_normalbase
             #pragma fragment frag
             #pragma multi_compile_fwdbase
             #pragma multi_compile_fog
@@ -637,7 +653,7 @@ Shader "FuchidoriPopToon/Opaque"
             Blend One One, Zero One
 
             CGPROGRAM
-            #pragma vertex vert_base
+            #pragma vertex vert_normalbase
             #pragma fragment frag
             #pragma multi_compile_fwdadd
             #pragma multi_compile_fog
