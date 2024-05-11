@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.0.1
-Shader "FuchidoriPopToon/Cutout"
+// FuchidoriPopToon v 1.0.2
+Shader "FuchidoriPopToon/Opaque"
 {
     Properties
     {
@@ -84,7 +84,7 @@ Shader "FuchidoriPopToon/Cutout"
     }
     SubShader
     {
-        Tags { "RenderType"="TransparentCutout" "Queue"="AlphaTest"}
+        Tags { "RenderType"="Opaque" "Queue"="Geometry"}
         LOD 100
 
         CGINCLUDE
