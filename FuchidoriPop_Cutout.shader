@@ -41,7 +41,7 @@ Shader "FuchidoriPopToon/Cutout"
 
         [Header(Outline)]
         [Space(10)]
-        _StencilRef("SencilRef", Int) = 127
+        _StencilRef("SencilRef", Int) = 2
         _OuterOutlineColor1st("OuterOutlineColor1st", Color) = (0.,0.,0.,1.)
         _OuterOutlineColor2nd("OuterOutlineColor2nd", Color) = (1.,1.,1.,1.)
         _InnerOutlineColor("InnerOutlineColor", Color) = (0.,0.,0.,1.)
@@ -574,13 +574,14 @@ Shader "FuchidoriPopToon/Cutout"
         // For ForwardBase Light
         Pass
         {
+            Tags {"LightMode" = "ForwardBase"}
             Stencil{
                 Ref [_StencilRef]
                 Comp always
                 Pass replace
             }
             Cull back
-            Tags {"LightMode" = "ForwardBase"}
+
             BlendOp Add, Add
             Blend SrcAlpha OneMinusSrcAlpha
 
@@ -712,6 +713,7 @@ Shader "FuchidoriPopToon/Cutout"
         }
         // for stencil outer outline
         Pass{
+            Tags {"LightMode" = "ForwardBase"}
             Stencil{
                 Ref [_StencilRef]
                 Comp NotEqual
@@ -765,6 +767,7 @@ Shader "FuchidoriPopToon/Cutout"
         }
         // for normal outline
         Pass{
+            Tags {"LightMode" = "ForwardBase"}
             Stencil{
                 Ref [_StencilRef]
                 Comp Equal
