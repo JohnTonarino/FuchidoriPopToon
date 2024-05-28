@@ -1,3 +1,4 @@
+![FuchidoriPopToon](https://github.com/JohnTonarino/FuchidoriPopToon/assets/141009460/8e0fa71a-c77d-4643-918e-aa466b171e2b)
 # 概要
 VRChatでの使用を想定したアウトラインにこだわりのあるシェーダーです。
 
