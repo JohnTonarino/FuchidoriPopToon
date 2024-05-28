@@ -849,6 +849,10 @@ Shader "FuchidoriPopToon/Cutout"
             }
             float4 frag(v2f_shadow i) : SV_Target
             {
+                fixed4 col = tex2D(_MainTex, i.uv);
+                fixed4 alphaMask = tex2D(_TransparentMask, i.uv);
+                col.a = col.a * OpenLitGray(alphaMask.rgb);
+                if (col.a < _TransparentLevel) discard;
                 SHADOW_CASTER_FRAGMENT(i)
             }
             ENDCG
@@ -881,6 +885,10 @@ Shader "FuchidoriPopToon/Cutout"
             }
             float4 frag(v2f_shadow i) : SV_Target
             {
+                fixed4 col = tex2D(_MainTex, i.uv);
+                fixed4 alphaMask = tex2D(_TransparentMask, i.uv);
+                col.a = col.a * OpenLitGray(alphaMask.rgb);
+                if (col.a < _TransparentLevel) discard;
                 SHADOW_CASTER_FRAGMENT(i)
             }
             ENDCG
