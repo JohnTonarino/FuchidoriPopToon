@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.0.2
+// FuchidoriPopToon v 1.0.3
 Shader "FuchidoriPopToon/Opaque"
 {
     Properties
@@ -29,7 +29,7 @@ Shader "FuchidoriPopToon/Opaque"
 
         [Header(Shadow)]
         [Space(10)]
-        _ShadowTex("ShadowTex", 2D) = "black" {}
+        _ShadowTex("ShadowTex", 2D) = "white" {}
         _ShadowOverlayColor("ShadowOverlayColor", Color) = (0., 0., 0., 1.)
         _ShadowStrength("ShadowStrength",Range(0., 1.)) = 0.5
 
@@ -60,6 +60,11 @@ Shader "FuchidoriPopToon/Opaque"
         [Space(10)]
         _EmissiveTex("EmissiveTex", 2D) = "black" {}
         [HDR] _EmissiveColor("EmissiveColor", Color) = (1., 1., 1., 1.)
+
+        [Header(ExperimentalFeature)]
+        [Space(10)]
+        [Toggle(_)] _SDFOn("SDF(Experimental)", Int) = 0
+        _SDFMaskTex ("SDFMaskTex", 2D) = "white" {}
 
         //------------------------------------------------------------------------------------------------------------------------------
         // [OpenLit] Properties for lighting
@@ -423,6 +428,10 @@ Shader "FuchidoriPopToon/Opaque"
         sampler2D _EmissiveTex;
         float4 _EmissiveColor;
 
+        uint _SDFOn;
+        sampler2D _SDFMaskTex;
+        float4 _SDFMaskTex_ST;
+
         // [OpenLit] Properties for lighting
         float _LightIntensity;
         uint _ReceiveShadow;
@@ -471,12 +480,12 @@ Shader "FuchidoriPopToon/Opaque"
             half2 viewUV : TEXCOORD11;
         };
 
-        float4 calcOutlineVertex(appdata v, fixed width){
-            float3 norm = normalize(mul((float3x3)UNITY_MATRIX_IT_MV, v.normalOS));
-            fixed4 outlineMask = tex2Dlod(_OutlineMask, float4(v.uv.xy, 0., 0.));
+        float4 calcOutlineVertex(half3 normalOS, float2 uv, float4 vertex, fixed width){
+            float3 norm = normalize(mul((float3x3)UNITY_MATRIX_IT_MV, normalOS));
+            fixed4 outlineMask = tex2Dlod(_OutlineMask, float4(uv.xy, 0., 0.));
             float2 offset = TransformViewToProjection(norm.xy)*outlineMask.r;
 
-            float4 outline_vertex = UnityObjectToClipPos(v.vertex);
+            float4 outline_vertex = UnityObjectToClipPos(vertex);
             outline_vertex.xy += (offset * width);
 
             return outline_vertex;
@@ -517,7 +526,7 @@ Shader "FuchidoriPopToon/Opaque"
 
             return o;
         }
-        g2f vert_normalbase(appdata v)
+        g2f vert_standardbase(appdata v)
         {
             g2f o;
             o = vert_base(v);
@@ -534,7 +543,7 @@ Shader "FuchidoriPopToon/Opaque"
         {
             g2f o;
             o = vert_base(v);
-            o.pos = calcOutlineVertex(v, width);
+            o.pos = calcOutlineVertex(v.normalOS, v.uv, v.vertex, width);
 
             // [OpenLit] Calculate and copy light datas
             OpenLitLightDatas lightDatas;
@@ -586,7 +595,7 @@ Shader "FuchidoriPopToon/Opaque"
             Blend SrcAlpha OneMinusSrcAlpha
 
             CGPROGRAM
-            #pragma vertex vert_normalbase
+            #pragma vertex vert_standardbase
             #pragma fragment frag
             #pragma multi_compile_fwdbase
             #pragma multi_compile_fog
@@ -613,7 +622,30 @@ Shader "FuchidoriPopToon/Opaque"
 
                 fixed4 shadowTexColor = tex2D(_ShadowTex, i.uv);
                 fixed4 shadowColor = shadowTexColor * _ShadowOverlayColor;
-                fixed3 factor = NdotL > _ShadowThreshold ? 1 : shadowColor.rgb;
+                fixed3 factor;
+                if(_SDFOn){
+                    half3 right = unity_ObjectToWorld._m00_m10_m20;
+                    half3 up = unity_ObjectToWorld._m01_m11_m21;
+                    half3 forward = unity_ObjectToWorld._m02_m12_m22;
+                    half isUpright = (up.y - L.y) < 0.? 1.:-1.;
+                    
+                    half FdotL = dot(forward.xz, L.xz)*isUpright;
+                    half RdotL = dot(right.xz, L.xz)*isUpright;
+
+                    half4 R_sdfMask = tex2D(_SDFMaskTex, float2(1.-i.uv.x,i.uv.y));
+                    half4 L_sdfMask  = tex2D(_SDFMaskTex, i.uv);
+
+                    half faceShadowMap = RdotL < 0.? R_sdfMask.r : L_sdfMask.r;
+
+                    float normalizedFdotL = .5*FdotL+.5;
+                    normalizedFdotL%=1.;
+
+                    factor = 1-step(faceShadowMap,normalizedFdotL);
+                    factor = factor > _ShadowThreshold ? factor : shadowColor.rgb;
+                }
+                else{
+                    factor = NdotL > _ShadowThreshold ? 1 : shadowColor.rgb;
+                }
                 factor = lerp(1., factor, _ShadowStrength);
                 if (_ReceiveShadow) factor *= attenuation;
 
@@ -655,7 +687,7 @@ Shader "FuchidoriPopToon/Opaque"
             Blend One One, Zero One
 
             CGPROGRAM
-            #pragma vertex vert_normalbase
+            #pragma vertex vert_standardbase
             #pragma fragment frag
             #pragma multi_compile_fwdadd
             #pragma multi_compile_fog
@@ -682,7 +714,7 @@ Shader "FuchidoriPopToon/Opaque"
 
                 fixed4 shadowTexColor = tex2D(_ShadowTex, i.uv);
                 fixed4 shadowColor = shadowTexColor * _ShadowOverlayColor;
-                float3 factor = NdotL > _ShadowThreshold ? 1 : shadowColor.rgb;
+                fixed3 factor = NdotL > _ShadowThreshold ? 1 : shadowColor.rgb;
                 factor = lerp(1., factor, _ShadowStrength);
 
                 fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
@@ -789,7 +821,7 @@ Shader "FuchidoriPopToon/Opaque"
             }
             ENDCG
         }
-        // For ShadowRendering
+        // For ShadowRendering (not for outline)
         Pass
         {
             Tags {"LightMode" = "ShadowCaster"}
@@ -811,6 +843,38 @@ Shader "FuchidoriPopToon/Opaque"
                 v2f_shadow o;
                 TRANSFER_SHADOW_CASTER_NORMALOFFSET(o)
                 o.pos = UnityObjectToClipPos(v.vertex);
+                o.uv = v.texcoord.xy;
+                o.screenPos = ComputeScreenPos(o.pos);
+                return o;
+            }
+            float4 frag(v2f_shadow i) : SV_Target
+            {
+                SHADOW_CASTER_FRAGMENT(i)
+            }
+            ENDCG
+        }
+        // For ShadowRendering (for outline)
+        Pass
+        {
+            Tags {"LightMode" = "ShadowCaster"}
+
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            #pragma multi_compile_shadowcaster
+            #include "UnityCG.cginc"
+
+            struct v2f_shadow {
+                V2F_SHADOW_CASTER;
+                float2 uv : TEXCOORD1;
+                float4 screenPos : TEXCOORD2;
+            };
+
+            v2f_shadow vert(appdata_base v)
+            {
+                v2f_shadow o;
+                TRANSFER_SHADOW_CASTER_NORMALOFFSET(o)
+                o.pos = calcOutlineVertex(v.normal, v.texcoord.xy, v.vertex, _OuterOutlineWidth);
                 o.uv = v.texcoord.xy;
                 o.screenPos = ComputeScreenPos(o.pos);
                 return o;
