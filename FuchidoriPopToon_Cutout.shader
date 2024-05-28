@@ -480,12 +480,12 @@ Shader "FuchidoriPopToon/Cutout"
             half2 viewUV : TEXCOORD11;
         };
 
-        float4 calcOutlineVertex(appdata v, fixed width){
-            float3 norm = normalize(mul((float3x3)UNITY_MATRIX_IT_MV, v.normalOS));
-            fixed4 outlineMask = tex2Dlod(_OutlineMask, float4(v.uv.xy, 0., 0.));
+        float4 calcOutlineVertex(half3 normalOS, float2 uv, float4 vertex, fixed width){
+            float3 norm = normalize(mul((float3x3)UNITY_MATRIX_IT_MV, normalOS));
+            fixed4 outlineMask = tex2Dlod(_OutlineMask, float4(uv.xy, 0., 0.));
             float2 offset = TransformViewToProjection(norm.xy)*outlineMask.r;
 
-            float4 outline_vertex = UnityObjectToClipPos(v.vertex);
+            float4 outline_vertex = UnityObjectToClipPos(vertex);
             outline_vertex.xy += (offset * width);
 
             return outline_vertex;
@@ -526,7 +526,7 @@ Shader "FuchidoriPopToon/Cutout"
 
             return o;
         }
-        g2f vert_normalbase(appdata v)
+        g2f vert_standardbase(appdata v)
         {
             g2f o;
             o = vert_base(v);
@@ -543,7 +543,7 @@ Shader "FuchidoriPopToon/Cutout"
         {
             g2f o;
             o = vert_base(v);
-            o.pos = calcOutlineVertex(v, width);
+            o.pos = calcOutlineVertex(v.normalOS, v.uv, v.vertex, width);
 
             // [OpenLit] Calculate and copy light datas
             OpenLitLightDatas lightDatas;
@@ -595,7 +595,7 @@ Shader "FuchidoriPopToon/Cutout"
             Blend SrcAlpha OneMinusSrcAlpha
 
             CGPROGRAM
-            #pragma vertex vert_normalbase
+            #pragma vertex vert_standardbase
             #pragma fragment frag
             #pragma multi_compile_fwdbase
             #pragma multi_compile_fog
@@ -687,7 +687,7 @@ Shader "FuchidoriPopToon/Cutout"
             Blend One One, Zero One
 
             CGPROGRAM
-            #pragma vertex vert_normalbase
+            #pragma vertex vert_standardbase
             #pragma fragment frag
             #pragma multi_compile_fwdadd
             #pragma multi_compile_fog
@@ -821,7 +821,7 @@ Shader "FuchidoriPopToon/Cutout"
             }
             ENDCG
         }
-        // For ShadowRendering
+        // For ShadowRendering (not for outline)
         Pass
         {
             Tags {"LightMode" = "ShadowCaster"}
@@ -843,6 +843,38 @@ Shader "FuchidoriPopToon/Cutout"
                 v2f_shadow o;
                 TRANSFER_SHADOW_CASTER_NORMALOFFSET(o)
                 o.pos = UnityObjectToClipPos(v.vertex);
+                o.uv = v.texcoord.xy;
+                o.screenPos = ComputeScreenPos(o.pos);
+                return o;
+            }
+            float4 frag(v2f_shadow i) : SV_Target
+            {
+                SHADOW_CASTER_FRAGMENT(i)
+            }
+            ENDCG
+        }
+        // For ShadowRendering (for outline)
+        Pass
+        {
+            Tags {"LightMode" = "ShadowCaster"}
+
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            #pragma multi_compile_shadowcaster
+            #include "UnityCG.cginc"
+
+            struct v2f_shadow {
+                V2F_SHADOW_CASTER;
+                float2 uv : TEXCOORD1;
+                float4 screenPos : TEXCOORD2;
+            };
+
+            v2f_shadow vert(appdata_base v)
+            {
+                v2f_shadow o;
+                TRANSFER_SHADOW_CASTER_NORMALOFFSET(o)
+                o.pos = calcOutlineVertex(v.normal, v.texcoord.xy, v.vertex, _OuterOutlineWidth);
                 o.uv = v.texcoord.xy;
                 o.screenPos = ComputeScreenPos(o.pos);
                 return o;
