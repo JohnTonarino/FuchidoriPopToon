@@ -61,6 +61,11 @@ Shader "FuchidoriPopToon/Opaque"
         _EmissiveTex("EmissiveTex", 2D) = "black" {}
         [HDR] _EmissiveColor("EmissiveColor", Color) = (1., 1., 1., 1.)
 
+        [Header(ExperimentalFeature)]
+        [Space(10)]
+        [Toggle(_)] _SDFOn("SDF(Experimental)", Int) = 0
+        _SDFMaskTex ("SDFMaskTex", 2D) = "white" {}
+
         //------------------------------------------------------------------------------------------------------------------------------
         // [OpenLit] Properties for lighting
 
@@ -423,6 +428,10 @@ Shader "FuchidoriPopToon/Opaque"
         sampler2D _EmissiveTex;
         float4 _EmissiveColor;
 
+        uint _SDFOn;
+        sampler2D _SDFMaskTex;
+        float4 _SDFMaskTex_ST;
+
         // [OpenLit] Properties for lighting
         float _LightIntensity;
         uint _ReceiveShadow;
@@ -613,7 +622,30 @@ Shader "FuchidoriPopToon/Opaque"
 
                 fixed4 shadowTexColor = tex2D(_ShadowTex, i.uv);
                 fixed4 shadowColor = shadowTexColor * _ShadowOverlayColor;
-                fixed3 factor = NdotL > _ShadowThreshold ? 1 : shadowColor.rgb;
+                fixed3 factor;
+                if(_SDFOn){
+                    half3 right = unity_ObjectToWorld._m00_m10_m20;
+                    half3 up = unity_ObjectToWorld._m01_m11_m21;
+                    half3 forward = unity_ObjectToWorld._m02_m12_m22;
+                    half isUpright = (up.y - L.y) < 0.? 1.:-1.;
+                    
+                    half FdotL = dot(forward.xz, L.xz)*isUpright;
+                    half RdotL = dot(right.xz, L.xz)*isUpright;
+
+                    half4 R_sdfMask = tex2D(_SDFMaskTex, float2(1.-i.uv.x,i.uv.y));
+                    half4 L_sdfMask  = tex2D(_SDFMaskTex, i.uv);
+
+                    half faceShadowMap = RdotL < 0.? R_sdfMask.r : L_sdfMask.r;
+
+                    float normalizedFdotL = .5*FdotL+.5;
+                    normalizedFdotL%=1.;
+
+                    factor = 1-step(faceShadowMap,normalizedFdotL);
+                    factor = factor > _ShadowThreshold ? factor : shadowColor.rgb;
+                }
+                else{
+                    factor = NdotL > _ShadowThreshold ? 1 : shadowColor.rgb;
+                }
                 factor = lerp(1., factor, _ShadowStrength);
                 if (_ReceiveShadow) factor *= attenuation;
 
@@ -682,7 +714,7 @@ Shader "FuchidoriPopToon/Opaque"
 
                 fixed4 shadowTexColor = tex2D(_ShadowTex, i.uv);
                 fixed4 shadowColor = shadowTexColor * _ShadowOverlayColor;
-                float3 factor = NdotL > _ShadowThreshold ? 1 : shadowColor.rgb;
+                fixed3 factor = NdotL > _ShadowThreshold ? 1 : shadowColor.rgb;
                 factor = lerp(1., factor, _ShadowStrength);
 
                 fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
