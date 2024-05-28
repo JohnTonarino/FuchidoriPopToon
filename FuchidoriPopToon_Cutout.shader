@@ -29,7 +29,7 @@ Shader "FuchidoriPopToon/Cutout"
 
         [Header(Shadow)]
         [Space(10)]
-        _ShadowTex("ShadowTex", 2D) = "black" {}
+        _ShadowTex("ShadowTex", 2D) = "white" {}
         _ShadowOverlayColor("ShadowOverlayColor", Color) = (0., 0., 0., 1.)
         _ShadowStrength("ShadowStrength",Range(0., 1.)) = 0.5
 
