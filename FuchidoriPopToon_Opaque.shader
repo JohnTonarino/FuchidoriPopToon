@@ -30,7 +30,9 @@ Shader "FuchidoriPopToon/Opaque"
         [Header(Shadow)]
         [Space(10)]
         _ShadowTex("ShadowTex", 2D) = "white" {}
-        _ShadowOverlayColor("ShadowOverlayColor", Color) = (0., 0., 0., 1.)
+        _ShadowOverlayColor1st("ShadowOverlayColor1st", Color) = (0., 0., 0., 1.)
+        _ShadowOverlayColor2nd("ShadowOverlayColor2nd", Color) = (0., 0., 0., 1.)
+        _ShadowWidth("ShadowWidth",Range(0., 1.)) = 0.5
         _ShadowStrength("ShadowStrength",Range(0., 1.)) = 0.5
 
         [Header(RimColor)]
@@ -405,7 +407,9 @@ Shader "FuchidoriPopToon/Opaque"
         half _SpecularBias;
 
         sampler2D _ShadowTex;
-        fixed4 _ShadowOverlayColor;
+        fixed4 _ShadowOverlayColor1st;
+        fixed4 _ShadowOverlayColor2nd;
+        half _ShadowWidth;
         half _ShadowStrength;
 
         fixed4 _RimColor;
@@ -621,7 +625,8 @@ Shader "FuchidoriPopToon/Opaque"
                 half phoneSpec = pow(smoothstep(_SpecularBias-.02,_SpecularBias+.02,max(0., dot(N,H))), _SpecularPower);
 
                 fixed4 shadowTexColor = tex2D(_ShadowTex, i.uv);
-                fixed4 shadowColor = shadowTexColor * _ShadowOverlayColor;
+                fixed4 shadowColor1st = shadowTexColor * _ShadowOverlayColor1st;
+                fixed4 shadowColor2nd = shadowTexColor * _ShadowOverlayColor2nd;
                 fixed3 factor;
                 if(_SDFOn){
                     half3 right = unity_ObjectToWorld._m00_m10_m20;
@@ -641,10 +646,14 @@ Shader "FuchidoriPopToon/Opaque"
                     normalizedFdotL%=1.;
 
                     factor = 1-step(faceShadowMap,normalizedFdotL);
-                    factor = factor > _ShadowThreshold ? factor : shadowColor.rgb;
+                    factor = factor > _ShadowThreshold ? factor :
+                                NdotL+_ShadowWidth > NdotL*NdotL?
+                                    shadowColor1st.rgb:shadowColor2nd.rgb;
                 }
                 else{
-                    factor = NdotL > _ShadowThreshold ? 1 : shadowColor.rgb;
+                    factor = NdotL > _ShadowThreshold ? 1 : 
+                                NdotL+_ShadowWidth > NdotL*NdotL?
+                                    shadowColor1st.rgb:shadowColor2nd.rgb;
                 }
                 factor = lerp(1., factor, _ShadowStrength);
                 if (_ReceiveShadow) factor *= attenuation;
@@ -713,8 +722,11 @@ Shader "FuchidoriPopToon/Opaque"
                 half phoneSpec = pow(smoothstep(_SpecularBias-.02,_SpecularBias+.02,max(0., (dot(N, H)))), _SpecularPower);
 
                 fixed4 shadowTexColor = tex2D(_ShadowTex, i.uv);
-                fixed4 shadowColor = shadowTexColor * _ShadowOverlayColor;
-                fixed3 factor = NdotL > _ShadowThreshold ? 1 : shadowColor.rgb;
+                fixed4 shadowColor1st = shadowTexColor * _ShadowOverlayColor1st;
+                fixed4 shadowColor2nd = shadowTexColor * _ShadowOverlayColor2nd;
+                fixed3 factor = NdotL > _ShadowThreshold ? 1 :
+                                NdotL+_ShadowWidth > NdotL*NdotL?
+                                    shadowColor1st.rgb:shadowColor2nd.rgb;
                 factor = lerp(1., factor, _ShadowStrength);
 
                 fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
