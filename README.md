@@ -16,6 +16,8 @@ https://github.com/lilxyzw/OpenLit
 
 2024/05/28 1.0.3 Shadowに関する不具合の修正。SDFFaceShadowに対応。
 
+2024/08/14 1.0.4 2影の実装。
+
 # 利用規約
 MITライセンスで公開しています。
 https://docs.google.com/document/d/1OkF35q4dHSGHCqt23miYk3yhpgeCFMfmQTHPol4tbb8/edit?usp=sharing
