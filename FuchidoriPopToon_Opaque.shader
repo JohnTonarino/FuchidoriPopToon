@@ -24,8 +24,8 @@ Shader "FuchidoriPopToon/Opaque"
         [Header(Specular)]
         [Space(10)]
         _SpecularStrength("SpecularStrength",Range(0., 1.)) = 0.0
-        _SpecularPower("SpecularPower",Range(0.01, 10.)) = 0.01
         _SpecularBias("SpecularBias",Range(0., 1.)) = 0.5
+        _Smoothness("Smoothness", Range(0.,1.)) = 0.5
 
         [Header(Shadow)]
         [Space(10)]
@@ -403,8 +403,8 @@ Shader "FuchidoriPopToon/Opaque"
         sampler2D _MatCapMask;
 
         half _SpecularStrength;
-        half _SpecularPower;
         half _SpecularBias;
+        half _Smoothness;
 
         sampler2D _ShadowTex;
         fixed4 _ShadowOverlayColor1st;
@@ -622,7 +622,7 @@ Shader "FuchidoriPopToon/Opaque"
                 float NdotL = dot(N, L);
 
                 float3 H = normalize(L + viewDir);
-                half phoneSpec = pow(smoothstep(_SpecularBias-.02,_SpecularBias+.02,max(0., dot(N,H))), _SpecularPower);
+                half phoneSpec = smoothstep(_SpecularBias-.02,_SpecularBias+.02,max(0., dot(N,H)));
 
                 fixed4 shadowTexColor = tex2D(_ShadowTex, i.uv);
                 fixed4 shadowColor1st = shadowTexColor * _ShadowOverlayColor1st;
@@ -672,7 +672,12 @@ Shader "FuchidoriPopToon/Opaque"
                 fixed4 emissiveTex = tex2D(_EmissiveTex, i.uv);
                 col.rgb += emissiveTex.rgb * _EmissiveColor;
 
-                col.rgb *= lerp(1., 1.+phoneSpec, _SpecularStrength);
+                half3 refDir = reflect(-viewDir, i.normalWS);
+                half3 mip = (1 - _Smoothness) * (1.7 - .7 * (1 - _Smoothness)) * UNITY_SPECCUBE_LOD_STEPS;
+                half4 rgbm = UNITY_SAMPLE_TEXCUBE_LOD(unity_SpecCube0, refDir, mip);
+                half3 indirectSpecular = DecodeHDR(rgbm, unity_SpecCube0_HDR);
+
+                col.rgb *= lerp(1., 1.+phoneSpec+indirectSpecular, _SpecularStrength);
                 col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);
 
                 fixed3 albedo = col.rgb;
@@ -719,7 +724,7 @@ Shader "FuchidoriPopToon/Opaque"
                 float NdotL = dot(N, L);
 
                 half3 H = normalize(L + viewDir);
-                half phoneSpec = pow(smoothstep(_SpecularBias-.02,_SpecularBias+.02,max(0., (dot(N, H)))), _SpecularPower);
+                half phoneSpec = smoothstep(_SpecularBias-.02,_SpecularBias+.02,max(0., (dot(N, H))));
 
                 fixed4 shadowTexColor = tex2D(_ShadowTex, i.uv);
                 fixed4 shadowColor1st = shadowTexColor * _ShadowOverlayColor1st;
@@ -743,7 +748,12 @@ Shader "FuchidoriPopToon/Opaque"
                 fixed4 emissiveTex = tex2D(_EmissiveTex, i.uv);
                 col.rgb += emissiveTex.rgb * _EmissiveColor;
 
-                col.rgb *= lerp(1., 1.+phoneSpec, _SpecularStrength);
+                half3 refDir = reflect(-viewDir, i.normalWS);
+                half3 mip = (1 - _Smoothness) * (1.7 - .7 * (1 - _Smoothness)) * UNITY_SPECCUBE_LOD_STEPS;
+                half4 rgbm = UNITY_SAMPLE_TEXCUBE_LOD(unity_SpecCube0, refDir, mip);
+                half3 indirectSpecular = DecodeHDR(rgbm, unity_SpecCube0_HDR);
+
+                col.rgb *= lerp(1., 1.+phoneSpec+indirectSpecular, _SpecularStrength);
                 col.rgb *= lerp(0., OPENLIT_LIGHT_COLOR, factor*attenuation);
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
