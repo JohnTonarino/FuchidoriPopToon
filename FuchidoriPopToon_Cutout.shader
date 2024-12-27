@@ -33,6 +33,7 @@ Shader "FuchidoriPopToon/Cutout"
         _ShadowOverlayColor1st("ShadowOverlayColor1st", Color) = (0., 0., 0., 1.)
         _ShadowOverlayColor2nd("ShadowOverlayColor2nd", Color) = (0., 0., 0., 1.)
         _ShadowWidth("ShadowWidth",Range(0., 1.)) = 0.5
+        _ShadowEdgeSmoothness("ShadowEdgeSmoothness",Range(0., 1.)) = 0.05
         _ShadowStrength("ShadowStrength",Range(0., 1.)) = 0.5
 
         [Header(RimColor)]
@@ -410,6 +411,7 @@ Shader "FuchidoriPopToon/Cutout"
         fixed4 _ShadowOverlayColor1st;
         fixed4 _ShadowOverlayColor2nd;
         half _ShadowWidth;
+        half _ShadowEdgeSmoothness;
         half _ShadowStrength;
 
         fixed4 _RimColor;
@@ -627,7 +629,12 @@ Shader "FuchidoriPopToon/Cutout"
                 fixed4 shadowTexColor = tex2D(_ShadowTex, i.uv);
                 fixed4 shadowColor1st = shadowTexColor * _ShadowOverlayColor1st;
                 fixed4 shadowColor2nd = shadowTexColor * _ShadowOverlayColor2nd;
-                fixed3 factor;
+                float  shadowBlend = smoothstep(NdotL-_ShadowEdgeSmoothness, NdotL+_ShadowEdgeSmoothness, NdotL*NdotL-_ShadowWidth);
+                fixed3 shadowColor = lerp(shadowColor1st.rgb, shadowColor2nd.rgb, shadowBlend);
+
+                fixed3 factor = 0.;
+                float factorBlend = 0.;
+
                 if(_SDFOn){
                     half3 right = unity_ObjectToWorld._m00_m10_m20;
                     half3 up = unity_ObjectToWorld._m01_m11_m21;
@@ -645,16 +652,13 @@ Shader "FuchidoriPopToon/Cutout"
                     float normalizedFdotL = .5*FdotL+.5;
                     normalizedFdotL%=1.;
 
-                    factor = 1-step(faceShadowMap,normalizedFdotL);
-                    factor = factor > _ShadowThreshold ? factor :
-                                NdotL+_ShadowWidth > NdotL*NdotL?
-                                    shadowColor1st.rgb:shadowColor2nd.rgb;
+                    factor = 1.-smoothstep(faceShadowMap-_ShadowEdgeSmoothness, faceShadowMap+_ShadowEdgeSmoothness, normalizedFdotL);
+                    factorBlend = smoothstep(_ShadowThreshold-_ShadowEdgeSmoothness, _ShadowThreshold+_ShadowEdgeSmoothness, factor);
                 }
                 else{
-                    factor = NdotL > _ShadowThreshold ? 1 : 
-                                NdotL+_ShadowWidth > NdotL*NdotL?
-                                    shadowColor1st.rgb:shadowColor2nd.rgb;
+                    factorBlend = smoothstep(_ShadowThreshold-_ShadowEdgeSmoothness, _ShadowThreshold+_ShadowEdgeSmoothness, NdotL);
                 }
+                factor = lerp(shadowColor, 1., factorBlend);
                 factor = lerp(1., factor, _ShadowStrength);
                 if (_ReceiveShadow) factor *= attenuation;
 
@@ -729,9 +733,11 @@ Shader "FuchidoriPopToon/Cutout"
                 fixed4 shadowTexColor = tex2D(_ShadowTex, i.uv);
                 fixed4 shadowColor1st = shadowTexColor * _ShadowOverlayColor1st;
                 fixed4 shadowColor2nd = shadowTexColor * _ShadowOverlayColor2nd;
-                fixed3 factor = NdotL > _ShadowThreshold ? 1 :
-                                NdotL+_ShadowWidth > NdotL*NdotL?
-                                    shadowColor1st.rgb:shadowColor2nd.rgb;
+                float  shadowBlend = smoothstep(NdotL-_ShadowEdgeSmoothness, NdotL+_ShadowEdgeSmoothness, NdotL*NdotL-_ShadowWidth);
+                fixed3 shadowColor = lerp(shadowColor1st.rgb, shadowColor2nd.rgb, shadowBlend);
+
+                float factorBlend = smoothstep(_ShadowThreshold-_ShadowEdgeSmoothness, _ShadowThreshold+_ShadowEdgeSmoothness, NdotL);
+                fixed3 factor = lerp(shadowColor, 1., factorBlend);
                 factor = lerp(1., factor, _ShadowStrength);
 
                 fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
