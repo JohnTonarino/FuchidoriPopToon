@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.0.5
+// FuchidoriPopToon v 1.0.6
 // FPT_Outline.cginc
 #ifndef FPT_OUTLINE_INCLUDED
 #define FPT_OUTLINE_INCLUDED

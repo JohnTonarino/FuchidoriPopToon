@@ -20,6 +20,8 @@ https://github.com/lilxyzw/OpenLit
 
 2024/12/27 1.0.5 鏡面反射まわりの修正。影の境界を柔らかくできるように。
 
+2025/03/28 1.0.6 リファクタリング。共通の実装をまとめた。
+
 # 利用規約
 MITライセンスで公開しています。
 https://docs.google.com/document/d/1OkF35q4dHSGHCqt23miYk3yhpgeCFMfmQTHPol4tbb8/edit?usp=sharing
