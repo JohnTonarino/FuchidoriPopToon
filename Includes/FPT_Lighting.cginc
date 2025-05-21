@@ -38,7 +38,7 @@ g2f vert_main_pass(appdata v)
     return o;
 }
 
-fixed3 CaluculateShadow(g2f i, float3 N, float3 L, float NdotL){
+fixed3 CalculateShadow(g2f i, float3 N, float3 L, float NdotL){
     fixed4 shadowTexColor = tex2D(_ShadowTex, i.uv);
     fixed4 shadowColor1st = shadowTexColor * _ShadowOverlayColor1st;
     fixed4 shadowColor2nd = shadowTexColor * _ShadowOverlayColor2nd;
@@ -78,6 +78,7 @@ fixed3 CaluculateShadow(g2f i, float3 N, float3 L, float NdotL){
 }
 
 void CalculateMaterialEffects(inout fixed4 col, g2f i, float3 N, float3 L, float3 viewDir) {
+
     // MatCap
     fixed4 matcap = tex2D(_MatCap, i.viewUV) * tex2D(_MatCapMask, i.uv);
     col.rgb = lerp(col.rgb, matcap.rgb, _MatCapStrength);

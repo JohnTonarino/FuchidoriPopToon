@@ -6,6 +6,7 @@
 #define FPT_CORE_INCLUDED
 
 #include "UnityCG.cginc"
+#include "LightVolumes.cginc"
 #include "Lighting.cginc"
 #include "AutoLight.cginc"
 #include "OpenLit.cginc"

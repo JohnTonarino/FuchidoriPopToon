@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
 // FuchidoriPopToon v 1.0.6
-Shader "FuchidoriPopToon/Cutout"
+Shader "T_FuchidoriPopToon/Cutout"
 {
     Properties
     {
@@ -143,15 +143,29 @@ Shader "FuchidoriPopToon/Cutout"
                 UnpackLightDatas(lightDatas, i.lightDatas);
 
                 half3 normalmap = UnpackScaleNormal(tex2D(_BumpMap, i.uv), _BumpScale);
-                float3 N = (i.tangent * normalmap.x) + (i.binormal * normalmap.y) + (i.normalWS * normalmap.z);
+                float3 N = normalize(i.tangent * normalmap.x + i.binormal * normalmap.y + i.normalWS * normalmap.z);
                 float3 L = lightDatas.lightDirection;
                 float NdotL = dot(N, L);
 
-                fixed3 factor = CaluculateShadow(i, N, L, NdotL);
+                fixed3 factor = CalculateShadow(i, N, L, NdotL);
                 if (_ReceiveShadow) factor *= attenuation;
 
                 fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
+                fixed3 originalAlbedo = col.rgb;
                 CalculateMaterialEffects(col, i, N, L, viewDir);
+
+                // VRC Light Volumes
+                float3 lv_L0, lv_L1r, lv_L1g, lv_L1b;
+                LightVolumeSH(i.positionWS, lv_L0, lv_L1r, lv_L1g, lv_L1b);
+
+                // Diffuse Contribution from Light Volumes
+                float3 LVEvaluate = LightVolumeEvaluate(i.positionWS, lv_L0, lv_L1r, lv_L1g, lv_L1b);
+                // Light Volume の拡散光はアルベドに乗算して加算
+                col.rgb += LVEvaluate * originalAlbedo;
+
+                // Specular Contribution from Light Volumes
+                float3 LVSpecular = LightVolumeSpecular(originalAlbedo, _Smoothness, 0.0, i.normalWS, viewDir, lv_L0, lv_L1r, lv_L1g, lv_L1b);
+                col.rgb += LVSpecular;
 
                 col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);
 
@@ -194,11 +208,11 @@ Shader "FuchidoriPopToon/Cutout"
                 UnpackLightDatas(lightDatas, i.lightDatas);
 
                 half3 normalmap = UnpackScaleNormal(tex2D(_BumpMap, i.uv), _BumpScale);
-                float3 N = (i.tangent * normalmap.x) + (i.binormal * normalmap.y) + (i.normalWS * normalmap.z);
+                float3 N = normalize(i.tangent * normalmap.x + i.binormal * normalmap.y + i.normalWS * normalmap.z);
                 float3 L = lightDatas.lightDirection;
                 float NdotL = dot(N, L);
 
-                fixed3 factor = CaluculateShadow(i, N, L, NdotL);
+                fixed3 factor = CalculateShadow(i, N, L, NdotL);
 
                 fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
                 CalculateMaterialEffects(col, i, N, L, viewDir);
