@@ -72,7 +72,7 @@ void geom_outline(triangle appdata IN[3], inout TriangleStream<g2f> stream) {
         appdata v = IN[i];
         o = vert_outlinebase(v, _OuterOutlineRatio * _OuterOutlineWidth);
         o.color = _OuterOutlineColor1st;
-        UNITY_TRANSFER_FOG(o, o.vertex);
+        UNITY_TRANSFER_FOG(o, o.pos);
 
         stream.Append(o);
     }
