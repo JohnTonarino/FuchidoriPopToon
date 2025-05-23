@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
 // FuchidoriPopToon v 1.0.6
-Shader "T_FuchidoriPopToon/Transparent"
+Shader "FuchidoriPopToon/Transparent"
 {
     Properties
     {
@@ -23,7 +23,7 @@ Shader "T_FuchidoriPopToon/Transparent"
 
         [Header(Specular)]
         [Space(10)]
-        _SpecularStrength("SpecularStrength",Range(0., 1.)) = 0.0
+        _SpecularStrength("SpecularStrength",Range(0.001, 1.)) = 0.001
         _SpecularBias("SpecularBias",Range(0., 1.)) = 0.5
         _Smoothness("Smoothness", Range(0.,1.)) = 0.5
 
@@ -35,6 +35,8 @@ Shader "T_FuchidoriPopToon/Transparent"
         _ShadowWidth("ShadowWidth",Range(0., 1.)) = 0.5
         _ShadowEdgeSmoothness("ShadowEdgeSmoothness",Range(0., 1.)) = 0.05
         _ShadowStrength("ShadowStrength",Range(0., 1.)) = 0.5
+        [Toggle(_)] _SDFOn("SDF", Int) = 0
+        _SDFMaskTex ("SDFMaskTex", 2D) = "white" {}
 
         [Header(RimColor)]
         [Space(10)]
@@ -66,8 +68,8 @@ Shader "T_FuchidoriPopToon/Transparent"
 
         [Header(ExperimentalFeature)]
         [Space(10)]
-        [Toggle(_)] _SDFOn("SDF(Experimental)", Int) = 0
-        _SDFMaskTex ("SDFMaskTex", 2D) = "white" {}
+        [Toggle(_)] _VRCLightVolumeOn("VRCLightVolume(Experimental)", Int) = 0
+        _VRCLightVolumeStrength("VRCLightVolumeStrength", Range(0., 1.)) = .5
 
         //------------------------------------------------------------------------------------------------------------------------------
         // [OpenLit] Properties for lighting
@@ -151,25 +153,16 @@ Shader "T_FuchidoriPopToon/Transparent"
                 if (_ReceiveShadow) factor *= attenuation;
 
                 fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
-                fixed3 originalAlbedo = col.rgb;
-                CalculateMaterialEffects(col, i, N, L, viewDir);
+                fixed3 albedo = col.rgb;
+                col.rgb += fpt_specular(L, -viewDir, N);
 
-                // VRC Light Volumes
-                float3 lv_L0, lv_L1r, lv_L1g, lv_L1b;
-                LightVolumeSH(i.positionWS, lv_L0, lv_L1r, lv_L1g, lv_L1b);
-
-                // Diffuse Contribution from Light Volumes
-                float3 LVEvaluate = LightVolumeEvaluate(i.positionWS, lv_L0, lv_L1r, lv_L1g, lv_L1b);
-                // Light Volume の拡散光はアルベドに乗算して加算
-                col.rgb += LVEvaluate * originalAlbedo;
-
-                // Specular Contribution from Light Volumes
-                float3 LVSpecular = LightVolumeSpecular(originalAlbedo, _Smoothness, 0.0, i.normalWS, viewDir, lv_L0, lv_L1r, lv_L1g, lv_L1b);
-                col.rgb += LVSpecular;
+                CalculateMaterialEffects(col, i, viewDir);
+                if(_VRCLightVolumeOn){
+                    col.rgb += _VRCLightVolumeStrength*lv_SampleVolumes(col.rgb, i, viewDir);
+                }
 
                 col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);
 
-                fixed3 albedo = col.rgb;
 #if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH
                 col.rgb += albedo * i.vertexLight;
                 col.rgb = min(col.rgb, albedo.rgb * _LightMaxLimit);
@@ -215,9 +208,10 @@ Shader "T_FuchidoriPopToon/Transparent"
                 fixed3 factor = CalculateShadow(i, N, L, NdotL);
 
                 fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
-                CalculateMaterialEffects(col, i, N, L, viewDir);
 
                 col.rgb *= lerp(0., OPENLIT_LIGHT_COLOR, factor*attenuation);
+
+                CalculateMaterialEffects(col, i, viewDir);
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
 
