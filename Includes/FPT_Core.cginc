@@ -36,6 +36,9 @@ fixed4 _ShadowOverlayColor2nd;
 half _ShadowWidth;
 half _ShadowEdgeSmoothness;
 half _ShadowStrength;
+uint _SDFOn;
+sampler2D _SDFMaskTex;
+float4 _SDFMaskTex_ST;
 
 fixed4 _RimColor;
 half _RimLightStrength;
@@ -57,9 +60,8 @@ half _TransparentLevel;
 sampler2D _EmissiveTex;
 float4 _EmissiveColor;
 
-uint _SDFOn;
-sampler2D _SDFMaskTex;
-float4 _SDFMaskTex_ST;
+uint _VRCLightVolumeOn;
+half _VRCLightVolumeStrength;
 
 // [OpenLit] Properties for lighting
 float _LightIntensity;
