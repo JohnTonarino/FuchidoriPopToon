@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.0.6
+// FuchidoriPopToon v 1.0.7
 // FPT_Lighting.cginc
 #ifndef FPT_LIGHTING_INCLUDED
 #define FPT_LIGHTING_INCLUDED
@@ -14,14 +14,22 @@ fixed fpt_rimLighting(float2 INuv, float4 INscreenPos, float3 viewDir, float3 no
     return lerp(0., pow(1. - saturate(dot(viewDir, normalWS)), 2.), _RimLightStrength) * rimLightMask.x;
 }
 fixed fpt_specular(float3 L, float3 viewDir, float3 N){
-    float3 H = normalize(L + viewDir);
-    return smoothstep( _SpecularBias - .02, _SpecularBias + .02, max(0., dot(N, H)));
+    float3 H = normalize(L-viewDir);
+    return _SpecularStrength*max(0.,smoothstep( _SpecularBias - .02, _SpecularBias + .02, dot(N, H)));
 }
-fixed fpt_indirectSpecular(float3 viewDir, float3 normalWS){
-    half3 refDir = reflect(-viewDir, normalWS);
-    half3 mip = (1 - _Smoothness) * (1.7 - .7 * (1 - _Smoothness)) * UNITY_SPECCUBE_LOD_STEPS;
-    half4 rgbm = UNITY_SAMPLE_TEXCUBE_LOD(unity_SpecCube0, refDir, mip);
-    return DecodeHDR(rgbm, unity_SpecCube0_HDR);
+fixed3 lv_SampleVolumes(fixed3 albedo, g2f i, float3 viewDir) {
+    // VRC Light Volumes
+    float3 lv_L0, lv_L1r, lv_L1g, lv_L1b;
+    LightVolumeSH(i.positionWS, lv_L0, lv_L1r, lv_L1g, lv_L1b);
+
+    // Diffuse Contribution from Light Volumes
+    fixed3 LVEvaluate = LightVolumeEvaluate(i.normalWS, lv_L0, lv_L1r, lv_L1g, lv_L1b);
+
+    // Specular Contribution from Light Volumes
+    fixed3 LVSpecular = LightVolumeSpecular(albedo, _Smoothness, 0.0, i.normalWS, viewDir, lv_L0, lv_L1r, lv_L1g, lv_L1b);
+
+    // Light Volume の拡散光はアルベドに乗算して加算
+    return LVEvaluate * albedo + LVSpecular;
 }
 
 g2f vert_main_pass(appdata v)
@@ -38,7 +46,7 @@ g2f vert_main_pass(appdata v)
     return o;
 }
 
-fixed3 CaluculateShadow(g2f i, float3 N, float3 L, float NdotL){
+fixed3 CalculateShadow(g2f i, float3 N, float3 L, float NdotL){
     fixed4 shadowTexColor = tex2D(_ShadowTex, i.uv);
     fixed4 shadowColor1st = shadowTexColor * _ShadowOverlayColor1st;
     fixed4 shadowColor2nd = shadowTexColor * _ShadowOverlayColor2nd;
@@ -77,20 +85,14 @@ fixed3 CaluculateShadow(g2f i, float3 N, float3 L, float NdotL){
     return factor;
 }
 
-void CalculateMaterialEffects(inout fixed4 col, g2f i, float3 N, float3 L, float3 viewDir) {
+void CalculateMaterialEffects(inout fixed4 col, g2f i, float3 viewDir) {
     // MatCap
     fixed4 matcap = tex2D(_MatCap, i.viewUV) * tex2D(_MatCapMask, i.uv);
     col.rgb = lerp(col.rgb, matcap.rgb, _MatCapStrength);
 
     // RimLighting
     fixed rim = fpt_rimLighting(i.uv, i.screenPos, viewDir, i.normalWS);
-    col.rgb = lerp(col.rgb, _RimColor.rgb, rim);
-
-    // Specular
-    fixed spec = fpt_specular(L, viewDir, N);
-    // AmbientLighting
-    fixed indirectSpec = fpt_indirectSpecular(viewDir, i.normalWS);
-    col.rgb *= lerp(1., 1. + spec + indirectSpec, _SpecularStrength);
+    col.rgb = lerp(col.rgb, col.rgb*_RimColor.rgb, rim);
 
     // alpha
     fixed4 alphaMask = tex2D(_TransparentMask, i.uv);

@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.0.6
+// FuchidoriPopToon v 1.0.7
 Shader "FuchidoriPopToon/Opaque"
 {
     Properties
@@ -23,7 +23,7 @@ Shader "FuchidoriPopToon/Opaque"
 
         [Header(Specular)]
         [Space(10)]
-        _SpecularStrength("SpecularStrength",Range(0., 1.)) = 0.0
+        _SpecularStrength("SpecularStrength",Range(0., 1.)) = 0.
         _SpecularBias("SpecularBias",Range(0., 1.)) = 0.5
         _Smoothness("Smoothness", Range(0.,1.)) = 0.5
 
@@ -35,6 +35,8 @@ Shader "FuchidoriPopToon/Opaque"
         _ShadowWidth("ShadowWidth",Range(0., 1.)) = 0.5
         _ShadowEdgeSmoothness("ShadowEdgeSmoothness",Range(0., 1.)) = 0.05
         _ShadowStrength("ShadowStrength",Range(0., 1.)) = 0.5
+        [Toggle(_)] _SDFOn("SDF", Int) = 0
+        _SDFMaskTex ("SDFMaskTex", 2D) = "white" {}
 
         [Header(RimColor)]
         [Space(10)]
@@ -66,8 +68,8 @@ Shader "FuchidoriPopToon/Opaque"
 
         [Header(ExperimentalFeature)]
         [Space(10)]
-        [Toggle(_)] _SDFOn("SDF(Experimental)", Int) = 0
-        _SDFMaskTex ("SDFMaskTex", 2D) = "white" {}
+        [Toggle(_)] _VRCLightVolumeOn("VRCLightVolume(Experimental)", Int) = 0
+        _VRCLightVolumeStrength("VRCLightVolumeStrength", Range(0., 1.)) = 1.
 
         //------------------------------------------------------------------------------------------------------------------------------
         // [OpenLit] Properties for lighting
@@ -136,19 +138,24 @@ Shader "FuchidoriPopToon/Opaque"
                 UnpackLightDatas(lightDatas, i.lightDatas);
 
                 half3 normalmap = UnpackScaleNormal(tex2D(_BumpMap, i.uv), _BumpScale);
-                float3 N = (i.tangent * normalmap.x) + (i.binormal * normalmap.y) + (i.normalWS * normalmap.z);
+                float3 N = normalize(i.tangent * normalmap.x + i.binormal * normalmap.y + i.normalWS * normalmap.z);
                 float3 L = lightDatas.lightDirection;
                 float NdotL = dot(N, L);
 
-                fixed3 factor = CaluculateShadow(i, N, L, NdotL);
+                fixed3 factor = CalculateShadow(i, N, L, NdotL);
                 if (_ReceiveShadow) factor *= attenuation;
 
                 fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
-                CalculateMaterialEffects(col, i, N, L, viewDir);
+                fixed3 albedo = col.rgb;
+                col.rgb += fpt_specular(L, -viewDir, N);
+
+                CalculateMaterialEffects(col, i, viewDir);
 
                 col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);
+                if(_VRCLightVolumeOn){
+                    col.rgb += _VRCLightVolumeStrength*lv_SampleVolumes(albedo, i, viewDir);
+                }
 
-                fixed3 albedo = col.rgb;
 #if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH
                 col.rgb += albedo * i.vertexLight;
                 col.rgb = min(col.rgb, albedo.rgb * _LightMaxLimit);
@@ -187,16 +194,17 @@ Shader "FuchidoriPopToon/Opaque"
                 UnpackLightDatas(lightDatas, i.lightDatas);
 
                 half3 normalmap = UnpackScaleNormal(tex2D(_BumpMap, i.uv), _BumpScale);
-                float3 N = (i.tangent * normalmap.x) + (i.binormal * normalmap.y) + (i.normalWS * normalmap.z);
+                float3 N = normalize(i.tangent * normalmap.x + i.binormal * normalmap.y + i.normalWS * normalmap.z);
                 float3 L = lightDatas.lightDirection;
                 float NdotL = dot(N, L);
 
-                fixed3 factor = CaluculateShadow(i, N, L, NdotL);
+                fixed3 factor = CalculateShadow(i, N, L, NdotL);
 
                 fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
-                CalculateMaterialEffects(col, i, N, L, viewDir);
 
                 col.rgb *= lerp(0., OPENLIT_LIGHT_COLOR, factor*attenuation);
+
+                CalculateMaterialEffects(col, i, viewDir);
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
 

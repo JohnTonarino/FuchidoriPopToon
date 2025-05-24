@@ -1,14 +1,15 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.0.6
+// FuchidoriPopToon v 1.0.7
 // FPT_Core.cginc
 #ifndef FPT_CORE_INCLUDED
 #define FPT_CORE_INCLUDED
 
 #include "UnityCG.cginc"
+#include "VRCLightVolumes/LightVolumes.cginc"
 #include "Lighting.cginc"
 #include "AutoLight.cginc"
-#include "OpenLit.cginc"
+#include "OpenLit/OpenLit.cginc"
 
 #define PI 3.141592
 
@@ -35,6 +36,9 @@ fixed4 _ShadowOverlayColor2nd;
 half _ShadowWidth;
 half _ShadowEdgeSmoothness;
 half _ShadowStrength;
+uint _SDFOn;
+sampler2D _SDFMaskTex;
+float4 _SDFMaskTex_ST;
 
 fixed4 _RimColor;
 half _RimLightStrength;
@@ -56,9 +60,8 @@ half _TransparentLevel;
 sampler2D _EmissiveTex;
 float4 _EmissiveColor;
 
-uint _SDFOn;
-sampler2D _SDFMaskTex;
-float4 _SDFMaskTex_ST;
+uint _VRCLightVolumeOn;
+half _VRCLightVolumeStrength;
 
 // [OpenLit] Properties for lighting
 float _LightIntensity;

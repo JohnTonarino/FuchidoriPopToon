@@ -1,12 +1,19 @@
-![FuchidoriPopToon](https://github.com/JohnTonarino/FuchidoriPopToon/assets/141009460/8e0fa71a-c77d-4643-918e-aa466b171e2b)
+![FuchidoriPopToonThumb_107](https://github.com/user-attachments/assets/d4e1db99-3f45-4c28-baf5-e3c12c7294bf)
+
 # 概要
 VRChatでの使用を想定したアウトラインにこだわりのあるシェーダーです。
 
 オブジェクトの内側と外側とで異なるアウトラインを描画できます。
 
-ライティングにはOpenLitを使用しています。
+Thanks to:
+* OpenLit : https://github.com/lilxyzw/OpenLit
+* VRCLightVolumes : https://github.com/REDSIM/VRCLightVolumes
 
-https://github.com/lilxyzw/OpenLit
+# 利用規約
+MITライセンスで公開しています。
+https://docs.google.com/document/d/1OkF35q4dHSGHCqt23miYk3yhpgeCFMfmQTHPol4tbb8/edit?usp=sharing
+
+# 更新履歴
 
 2024/05/05 1.0.0 リリース
 
@@ -22,10 +29,7 @@ https://github.com/lilxyzw/OpenLit
 
 2025/03/28 1.0.6 リファクタリング。共通の実装をまとめた。
 
-# 利用規約
-MITライセンスで公開しています。
-https://docs.google.com/document/d/1OkF35q4dHSGHCqt23miYk3yhpgeCFMfmQTHPol4tbb8/edit?usp=sharing
-
+2025/05/24 1.0.7 VRCLightVolumesに対応。ライティング周りの処理の見直し。
 
 # 免責事項
 当シェーダーを利用することで発生したトラブルや不利益、損害については、製作者は一切責任を負いかねます。
