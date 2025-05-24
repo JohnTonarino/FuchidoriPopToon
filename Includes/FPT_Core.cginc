@@ -9,7 +9,7 @@
 #include "VRCLightVolumes/LightVolumes.cginc"
 #include "Lighting.cginc"
 #include "AutoLight.cginc"
-#include "OpenLitOpenLit.cginc"
+#include "OpenLit/OpenLit.cginc"
 
 #define PI 3.141592
 
