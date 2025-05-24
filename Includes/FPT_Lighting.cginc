@@ -23,7 +23,7 @@ fixed3 lv_SampleVolumes(fixed3 albedo, g2f i, float3 viewDir) {
     LightVolumeSH(i.positionWS, lv_L0, lv_L1r, lv_L1g, lv_L1b);
 
     // Diffuse Contribution from Light Volumes
-    fixed3 LVEvaluate = LightVolumeEvaluate(i.positionWS, lv_L0, lv_L1r, lv_L1g, lv_L1b);
+    fixed3 LVEvaluate = LightVolumeEvaluate(i.normalWS, lv_L0, lv_L1r, lv_L1g, lv_L1b);
 
     // Specular Contribution from Light Volumes
     fixed3 LVSpecular = LightVolumeSpecular(albedo, _Smoothness, 0.0, i.normalWS, viewDir, lv_L0, lv_L1r, lv_L1g, lv_L1b);
