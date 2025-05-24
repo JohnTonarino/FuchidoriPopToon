@@ -1,15 +1,15 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.0.6
+// FuchidoriPopToon v 1.0.7
 // FPT_Core.cginc
 #ifndef FPT_CORE_INCLUDED
 #define FPT_CORE_INCLUDED
 
 #include "UnityCG.cginc"
-#include "LightVolumes.cginc"
+#include "VRCLightVolumes/LightVolumes.cginc"
 #include "Lighting.cginc"
 #include "AutoLight.cginc"
-#include "OpenLit.cginc"
+#include "OpenLitOpenLit.cginc"
 
 #define PI 3.141592
 

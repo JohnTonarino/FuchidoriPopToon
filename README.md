@@ -4,9 +4,11 @@ VRChatでの使用を想定したアウトラインにこだわりのあるシ�
 
 オブジェクトの内側と外側とで異なるアウトラインを描画できます。
 
-ライティングにはOpenLitを使用しています。
+Thanks to:
+* OpenLit : https://github.com/lilxyzw/OpenLit
+* VRCLightVolumes : https://github.com/REDSIM/VRCLightVolumes
 
-https://github.com/lilxyzw/OpenLit
+# 更新履歴
 
 2024/05/05 1.0.0 リリース
 
@@ -21,6 +23,8 @@ https://github.com/lilxyzw/OpenLit
 2024/12/27 1.0.5 鏡面反射まわりの修正。影の境界を柔らかくできるように。
 
 2025/03/28 1.0.6 リファクタリング。共通の実装をまとめた。
+
+2025/05/24 1.0.7 VRCLightVolumesに対応。ライティング周りの処理の見直し。
 
 # 利用規約
 MITライセンスで公開しています。
