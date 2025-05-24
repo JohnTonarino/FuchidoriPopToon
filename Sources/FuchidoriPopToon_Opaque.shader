@@ -23,7 +23,7 @@ Shader "FuchidoriPopToon/Opaque"
 
         [Header(Specular)]
         [Space(10)]
-        _SpecularStrength("SpecularStrength",Range(0.001, 1.)) = 0.001
+        _SpecularStrength("SpecularStrength",Range(0., 1.)) = 0.
         _SpecularBias("SpecularBias",Range(0., 1.)) = 0.5
         _Smoothness("Smoothness", Range(0.,1.)) = 0.5
 
@@ -69,7 +69,7 @@ Shader "FuchidoriPopToon/Opaque"
         [Header(ExperimentalFeature)]
         [Space(10)]
         [Toggle(_)] _VRCLightVolumeOn("VRCLightVolume(Experimental)", Int) = 0
-        _VRCLightVolumeStrength("VRCLightVolumeStrength", Range(0., 1.)) = .5
+        _VRCLightVolumeStrength("VRCLightVolumeStrength", Range(0., 1.)) = 1.
 
         //------------------------------------------------------------------------------------------------------------------------------
         // [OpenLit] Properties for lighting
@@ -150,11 +150,11 @@ Shader "FuchidoriPopToon/Opaque"
                 col.rgb += fpt_specular(L, -viewDir, N);
 
                 CalculateMaterialEffects(col, i, viewDir);
+
+                col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);
                 if(_VRCLightVolumeOn){
                     col.rgb += _VRCLightVolumeStrength*lv_SampleVolumes(albedo, i, viewDir);
                 }
-
-                col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);
 
 #if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH
                 col.rgb += albedo * i.vertexLight;
