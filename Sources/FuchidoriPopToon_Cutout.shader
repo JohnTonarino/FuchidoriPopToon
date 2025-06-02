@@ -202,8 +202,8 @@ Shader "FuchidoriPopToon/Cutout"
 
                 fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
 
-                col.rgb *= lerp(0., OPENLIT_LIGHT_COLOR, factor*attenuation);
                 CalculateMaterialEffects(col, i, viewDir);
+                col.rgb *= lerp(0., OPENLIT_LIGHT_COLOR, factor*attenuation);
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
 
