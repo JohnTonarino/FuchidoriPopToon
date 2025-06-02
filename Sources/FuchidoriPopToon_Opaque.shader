@@ -153,7 +153,8 @@ Shader "FuchidoriPopToon/Opaque"
 
                 col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);
                 if(_VRCLightVolumeOn){
-                    col.rgb += _VRCLightVolumeStrength*lv_SampleVolumes(albedo, i, viewDir);
+                    fixed3 lvContribution = lv_SampleVolumes(albedo, i, viewDir);
+                    col.rgb = lerp(col.rgb, col.rgb+lvContribution, _VRCLightVolumeStrength);
                 }
 
 #if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH
@@ -203,7 +204,6 @@ Shader "FuchidoriPopToon/Opaque"
                 fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
 
                 col.rgb *= lerp(0., OPENLIT_LIGHT_COLOR, factor*attenuation);
-
                 CalculateMaterialEffects(col, i, viewDir);
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
