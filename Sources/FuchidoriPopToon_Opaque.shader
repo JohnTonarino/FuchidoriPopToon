@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.0.7
+// FuchidoriPopToon v 1.0.8
 Shader "FuchidoriPopToon/Opaque"
 {
     Properties
@@ -18,6 +18,7 @@ Shader "FuchidoriPopToon/Opaque"
         [Header(MatCap)]
         [Space(10)]
         _MatCap("MatCap", 2D) = "white" {}
+        [Enum(Lerp,0,Mul,1)]_MatCapType ("MatCapCalcType", int) = 0
         _MatCapStrength("MatCapStrength", Range(0., 1.)) = 0.
         _MatCapMask("MatCapMask", 2D) = "white" {}
 
@@ -68,8 +69,8 @@ Shader "FuchidoriPopToon/Opaque"
 
         [Header(ExperimentalFeature)]
         [Space(10)]
-        [Toggle(_)] _VRCLightVolumeOn("VRCLightVolume(Experimental)", Int) = 0
-        _VRCLightVolumeStrength("VRCLightVolumeStrength", Range(0., 1.)) = 1.
+        [Toggle(_)] _VRCLightVolumesOn("VRCLightVolumes(Experimental)", Int) = 0
+        _VRCLightVolumesStrength("VRCLightVolumesStrength", Range(0., 1.)) = 1.
 
         //------------------------------------------------------------------------------------------------------------------------------
         // [OpenLit] Properties for lighting
@@ -152,8 +153,9 @@ Shader "FuchidoriPopToon/Opaque"
                 CalculateMaterialEffects(col, i, viewDir);
 
                 col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);
-                if(_VRCLightVolumeOn){
-                    col.rgb += _VRCLightVolumeStrength*lv_SampleVolumes(albedo, i, viewDir);
+                if(_VRCLightVolumesOn){
+                    fixed3 lvContribution = lv_SampleVolumes(albedo, i, viewDir);
+                    col.rgb = lerp(col.rgb, col.rgb+lvContribution, _VRCLightVolumesStrength);
                 }
 
 #if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH
@@ -202,9 +204,8 @@ Shader "FuchidoriPopToon/Opaque"
 
                 fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
 
-                col.rgb *= lerp(0., OPENLIT_LIGHT_COLOR, factor*attenuation);
-
                 CalculateMaterialEffects(col, i, viewDir);
+                col.rgb *= lerp(0., OPENLIT_LIGHT_COLOR, factor*attenuation);
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
 

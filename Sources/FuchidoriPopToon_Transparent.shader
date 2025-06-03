@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.0.7
+// FuchidoriPopToon v 1.0.8
 Shader "FuchidoriPopToon/Transparent"
 {
     Properties
@@ -18,6 +18,7 @@ Shader "FuchidoriPopToon/Transparent"
         [Header(MatCap)]
         [Space(10)]
         _MatCap("MatCap", 2D) = "white" {}
+        [Enum(Lerp,0,Mul,1)]_MatCapType ("MatCapCalcType", int) = 0
         _MatCapStrength("MatCapStrength", Range(0., 1.)) = 0.
         _MatCapMask("MatCapMask", 2D) = "white" {}
 
@@ -68,8 +69,8 @@ Shader "FuchidoriPopToon/Transparent"
 
         [Header(ExperimentalFeature)]
         [Space(10)]
-        [Toggle(_)] _VRCLightVolumeOn("VRCLightVolume(Experimental)", Int) = 0
-        _VRCLightVolumeStrength("VRCLightVolumeStrength", Range(0., 1.)) = 1.
+        [Toggle(_)] _VRCLightVolumesOn("VRCLightVolumes(Experimental)", Int) = 0
+        _VRCLightVolumesStrength("VRCLightVolumesStrength", Range(0., 1.)) = 1.
 
         //------------------------------------------------------------------------------------------------------------------------------
         // [OpenLit] Properties for lighting
@@ -103,13 +104,6 @@ Shader "FuchidoriPopToon/Transparent"
         #include "../Includes/FPT_Lighting.cginc"
 
         #pragma skip_variants LIGHTMAP_ON DYNAMICLIGHTMAP_ON LIGHTMAP_SHADOW_MIXING SHADOWS_SHADOWMASK DIRLIGHTMAP_COMBINED
-
-        fixed drawRimLighting(float2 INuv, float4 INscreenPos, float3 viewDir, float3 INnormal) {
-            float2 viewportPos = INscreenPos.xy / INscreenPos.w;
-            float2 screenPos = viewportPos * _ScreenParams.xy;
-            fixed4 rimLightMask = tex2D(_RimLightMask, INuv);
-            return lerp(0., pow(1. - saturate(dot(viewDir, INnormal)), 2.), _RimLightStrength) * rimLightMask.x;
-        }
         ENDCG
 
         // For ForwardBase Light
@@ -159,8 +153,8 @@ Shader "FuchidoriPopToon/Transparent"
                 CalculateMaterialEffects(col, i, viewDir);
 
                 col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);
-                if(_VRCLightVolumeOn){
-                    col.rgb += _VRCLightVolumeStrength*lv_SampleVolumes(albedo, i, viewDir);
+                if(_VRCLightVolumesOn){
+                    col.rgb += _VRCLightVolumesStrength*lv_SampleVolumes(albedo, i, viewDir);
                 }
 
 #if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH
@@ -209,9 +203,8 @@ Shader "FuchidoriPopToon/Transparent"
 
                 fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
 
-                col.rgb *= lerp(0., OPENLIT_LIGHT_COLOR, factor*attenuation);
-
                 CalculateMaterialEffects(col, i, viewDir);
+                col.rgb *= lerp(0., OPENLIT_LIGHT_COLOR, factor*attenuation);
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
 

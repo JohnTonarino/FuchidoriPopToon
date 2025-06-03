@@ -1,4 +1,4 @@
-![FuchidoriPopToonThumb_107](https://github.com/user-attachments/assets/d4e1db99-3f45-4c28-baf5-e3c12c7294bf)
+![FuchidoriPopToonThumb_108](https://github.com/user-attachments/assets/f7c3cf05-52d4-4f1d-8535-b08e674ae8a1)
 
 # 概要
 VRChatでの使用を想定したアウトラインにこだわりのあるシェーダーです。
@@ -30,6 +30,8 @@ https://docs.google.com/document/d/1OkF35q4dHSGHCqt23miYk3yhpgeCFMfmQTHPol4tbb8/
 2025/03/28 1.0.6 リファクタリング。共通の実装をまとめた。
 
 2025/05/24 1.0.7 VRCLightVolumesに対応。ライティング周りの処理の見直し。
+
+2025/06/04 1.0.8 ライティング周りのリファクタリング。MatCapの計算オプションの追加。
 
 # 免責事項
 当シェーダーを利用することで発生したトラブルや不利益、損害については、製作者は一切責任を負いかねます。

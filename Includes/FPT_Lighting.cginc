@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.0.7
+// FuchidoriPopToon v 1.0.8
 // FPT_Lighting.cginc
 #ifndef FPT_LIGHTING_INCLUDED
 #define FPT_LIGHTING_INCLUDED
@@ -13,7 +13,7 @@ fixed fpt_rimLighting(float2 INuv, float4 INscreenPos, float3 viewDir, float3 no
     fixed4 rimLightMask = tex2D(_RimLightMask, INuv);
     return lerp(0., pow(1. - saturate(dot(viewDir, normalWS)), 2.), _RimLightStrength) * rimLightMask.x;
 }
-fixed fpt_specular(float3 L, float3 viewDir, float3 N){
+float fpt_specular(float3 L, float3 viewDir, float3 N){
     float3 H = normalize(L-viewDir);
     return _SpecularStrength*max(0.,smoothstep( _SpecularBias - .02, _SpecularBias + .02, dot(N, H)));
 }
@@ -25,11 +25,7 @@ fixed3 lv_SampleVolumes(fixed3 albedo, g2f i, float3 viewDir) {
     // Diffuse Contribution from Light Volumes
     fixed3 LVEvaluate = LightVolumeEvaluate(i.normalWS, lv_L0, lv_L1r, lv_L1g, lv_L1b);
 
-    // Specular Contribution from Light Volumes
-    fixed3 LVSpecular = LightVolumeSpecular(albedo, _Smoothness, 0.0, i.normalWS, viewDir, lv_L0, lv_L1r, lv_L1g, lv_L1b);
-
-    // Light Volume の拡散光はアルベドに乗算して加算
-    return LVEvaluate * albedo + LVSpecular;
+    return LVEvaluate * albedo;
 }
 
 g2f vert_main_pass(appdata v)
@@ -72,7 +68,7 @@ fixed3 CalculateShadow(g2f i, float3 N, float3 L, float NdotL){
 
         half faceShadowMap = RdotL < 0.? R_sdfMask.r : L_sdfMask.r;
 
-        float normalizedFdotL = .5*FdotL+.5;
+        float normalizedFdotL = (.5*FdotL)+.5;
         factor = 1.-smoothstep(faceShadowMap-_ShadowEdgeSmoothness, faceShadowMap+_ShadowEdgeSmoothness, normalizedFdotL);
     }
     else{
@@ -88,7 +84,9 @@ fixed3 CalculateShadow(g2f i, float3 N, float3 L, float NdotL){
 void CalculateMaterialEffects(inout fixed4 col, g2f i, float3 viewDir) {
     // MatCap
     fixed4 matcap = tex2D(_MatCap, i.viewUV) * tex2D(_MatCapMask, i.uv);
-    col.rgb = lerp(col.rgb, matcap.rgb, _MatCapStrength);
+    col.rgb = _MatCapType==0?
+                lerp(col.rgb, matcap.rgb, _MatCapStrength):
+                col.rgb*lerp(1., matcap.rgb, _MatCapStrength);
 
     // RimLighting
     fixed rim = fpt_rimLighting(i.uv, i.screenPos, viewDir, i.normalWS);
