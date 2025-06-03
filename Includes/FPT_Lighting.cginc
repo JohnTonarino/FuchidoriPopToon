@@ -88,7 +88,9 @@ fixed3 CalculateShadow(g2f i, float3 N, float3 L, float NdotL){
 void CalculateMaterialEffects(inout fixed4 col, g2f i, float3 viewDir) {
     // MatCap
     fixed4 matcap = tex2D(_MatCap, i.viewUV) * tex2D(_MatCapMask, i.uv);
-    col.rgb = lerp(col.rgb, matcap.rgb, _MatCapStrength);
+    col.rgb = _MatCapType==0?
+                lerp(col.rgb, matcap.rgb, _MatCapStrength):
+                col.rgb*lerp(1., matcap.rgb, _MatCapStrength);
 
     // RimLighting
     fixed rim = fpt_rimLighting(i.uv, i.screenPos, viewDir, i.normalWS);

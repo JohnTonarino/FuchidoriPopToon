@@ -22,6 +22,7 @@ half _BumpScale;
 sampler2D _BumpMap;
 float4 _BumpMap_ST;
 
+uint _MatCapType;
 sampler2D _MatCap;
 half _MatCapStrength;
 sampler2D _MatCapMask;
