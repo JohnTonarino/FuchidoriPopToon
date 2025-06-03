@@ -1,4 +1,4 @@
-![FuchidoriPopToonThumb_107](https://github.com/user-attachments/assets/d4e1db99-3f45-4c28-baf5-e3c12c7294bf)
+![FuchidoriPopToonThumb_108](https://github.com/user-attachments/assets/f7c3cf05-52d4-4f1d-8535-b08e674ae8a1)
 
 # 概要
 VRChatでの使用を想定したアウトラインにこだわりのあるシェーダーです。
