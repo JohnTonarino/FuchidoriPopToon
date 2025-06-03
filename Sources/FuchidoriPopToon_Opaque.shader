@@ -69,8 +69,8 @@ Shader "FuchidoriPopToon/Opaque"
 
         [Header(ExperimentalFeature)]
         [Space(10)]
-        [Toggle(_)] _VRCLightVolumeOn("VRCLightVolume(Experimental)", Int) = 0
-        _VRCLightVolumeStrength("VRCLightVolumeStrength", Range(0., 1.)) = 1.
+        [Toggle(_)] _VRCLightVolumesOn("VRCLightVolumes(Experimental)", Int) = 0
+        _VRCLightVolumesStrength("VRCLightVolumesStrength", Range(0., 1.)) = 1.
 
         //------------------------------------------------------------------------------------------------------------------------------
         // [OpenLit] Properties for lighting
@@ -153,9 +153,9 @@ Shader "FuchidoriPopToon/Opaque"
                 CalculateMaterialEffects(col, i, viewDir);
 
                 col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);
-                if(_VRCLightVolumeOn){
+                if(_VRCLightVolumesOn){
                     fixed3 lvContribution = lv_SampleVolumes(albedo, i, viewDir);
-                    col.rgb = lerp(col.rgb, col.rgb+lvContribution, _VRCLightVolumeStrength);
+                    col.rgb = lerp(col.rgb, col.rgb+lvContribution, _VRCLightVolumesStrength);
                 }
 
 #if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH

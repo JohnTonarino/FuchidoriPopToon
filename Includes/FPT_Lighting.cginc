@@ -25,11 +25,7 @@ fixed3 lv_SampleVolumes(fixed3 albedo, g2f i, float3 viewDir) {
     // Diffuse Contribution from Light Volumes
     fixed3 LVEvaluate = LightVolumeEvaluate(i.normalWS, lv_L0, lv_L1r, lv_L1g, lv_L1b);
 
-    // Specular Contribution from Light Volumes
-    fixed3 LVSpecular = LightVolumeSpecular(albedo, _Smoothness, 0.0, i.normalWS, viewDir, lv_L0, lv_L1r, lv_L1g, lv_L1b);
-
-    // Light Volume の拡散光はアルベドに乗算して加算
-    return LVEvaluate * albedo + LVSpecular;
+    return LVEvaluate * albedo;
 }
 
 g2f vert_main_pass(appdata v)

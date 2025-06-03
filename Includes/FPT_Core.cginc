@@ -61,8 +61,8 @@ half _TransparentLevel;
 sampler2D _EmissiveTex;
 float4 _EmissiveColor;
 
-uint _VRCLightVolumeOn;
-half _VRCLightVolumeStrength;
+uint _VRCLightVolumesOn;
+half _VRCLightVolumesStrength;
 
 // [OpenLit] Properties for lighting
 float _LightIntensity;
