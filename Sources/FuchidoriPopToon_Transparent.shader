@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.0.7
+// FuchidoriPopToon v 1.0.8
 Shader "FuchidoriPopToon/Transparent"
 {
     Properties

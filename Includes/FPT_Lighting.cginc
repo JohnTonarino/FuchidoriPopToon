@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.0.7
+// FuchidoriPopToon v 1.0.8
 // FPT_Lighting.cginc
 #ifndef FPT_LIGHTING_INCLUDED
 #define FPT_LIGHTING_INCLUDED

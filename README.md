@@ -31,5 +31,7 @@ https://docs.google.com/document/d/1OkF35q4dHSGHCqt23miYk3yhpgeCFMfmQTHPol4tbb8/
 
 2025/05/24 1.0.7 VRCLightVolumesに対応。ライティング周りの処理の見直し。
 
+2025/06/04 1.0.8 ライティング周りのリファクタリング。MatCapの計算オプションの追加。
+
 # 免責事項
 当シェーダーを利用することで発生したトラブルや不利益、損害については、製作者は一切責任を負いかねます。
