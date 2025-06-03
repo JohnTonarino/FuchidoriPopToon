@@ -18,6 +18,7 @@ Shader "FuchidoriPopToon/Transparent"
         [Header(MatCap)]
         [Space(10)]
         _MatCap("MatCap", 2D) = "white" {}
+        [Enum(Lerp,0,Mul,1)]_MatCapType ("MatCapCalcType", int) = 0
         _MatCapStrength("MatCapStrength", Range(0., 1.)) = 0.
         _MatCapMask("MatCapMask", 2D) = "white" {}
 
@@ -68,8 +69,8 @@ Shader "FuchidoriPopToon/Transparent"
 
         [Header(ExperimentalFeature)]
         [Space(10)]
-        [Toggle(_)] _VRCLightVolumeOn("VRCLightVolume(Experimental)", Int) = 0
-        _VRCLightVolumeStrength("VRCLightVolumeStrength", Range(0., 1.)) = 1.
+        [Toggle(_)] _VRCLightVolumesOn("VRCLightVolumes(Experimental)", Int) = 0
+        _VRCLightVolumesStrength("VRCLightVolumesStrength", Range(0., 1.)) = 1.
 
         //------------------------------------------------------------------------------------------------------------------------------
         // [OpenLit] Properties for lighting
@@ -152,8 +153,8 @@ Shader "FuchidoriPopToon/Transparent"
                 CalculateMaterialEffects(col, i, viewDir);
 
                 col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);
-                if(_VRCLightVolumeOn){
-                    col.rgb += _VRCLightVolumeStrength*lv_SampleVolumes(albedo, i, viewDir);
+                if(_VRCLightVolumesOn){
+                    col.rgb += _VRCLightVolumesStrength*lv_SampleVolumes(albedo, i, viewDir);
                 }
 
 #if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH
