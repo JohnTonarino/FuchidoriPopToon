@@ -103,13 +103,6 @@ Shader "FuchidoriPopToon/Cutout"
         #include "../Includes/FPT_Lighting.cginc"
 
         #pragma skip_variants LIGHTMAP_ON DYNAMICLIGHTMAP_ON LIGHTMAP_SHADOW_MIXING SHADOWS_SHADOWMASK DIRLIGHTMAP_COMBINED
-
-        fixed drawRimLighting(float2 INuv, float4 INscreenPos, float3 viewDir, float3 INnormal) {
-            float2 viewportPos = INscreenPos.xy / INscreenPos.w;
-            float2 screenPos = viewportPos * _ScreenParams.xy;
-            fixed4 rimLightMask = tex2D(_RimLightMask, INuv);
-            return lerp(0., pow(1. - saturate(dot(viewDir, INnormal)), 2.), _RimLightStrength) * rimLightMask.x;
-        }
         ENDCG
 
         // For ForwardBase Light
@@ -209,9 +202,8 @@ Shader "FuchidoriPopToon/Cutout"
 
                 fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
 
+                CalculateMaterialEffects(col, i, viewDir);
                 col.rgb *= lerp(0., OPENLIT_LIGHT_COLOR, factor*attenuation);
-
-                CalculateMaterialEffects(col, i, viewDir);;
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
 

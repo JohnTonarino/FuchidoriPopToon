@@ -13,7 +13,7 @@ fixed fpt_rimLighting(float2 INuv, float4 INscreenPos, float3 viewDir, float3 no
     fixed4 rimLightMask = tex2D(_RimLightMask, INuv);
     return lerp(0., pow(1. - saturate(dot(viewDir, normalWS)), 2.), _RimLightStrength) * rimLightMask.x;
 }
-fixed fpt_specular(float3 L, float3 viewDir, float3 N){
+float fpt_specular(float3 L, float3 viewDir, float3 N){
     float3 H = normalize(L-viewDir);
     return _SpecularStrength*max(0.,smoothstep( _SpecularBias - .02, _SpecularBias + .02, dot(N, H)));
 }
@@ -72,7 +72,7 @@ fixed3 CalculateShadow(g2f i, float3 N, float3 L, float NdotL){
 
         half faceShadowMap = RdotL < 0.? R_sdfMask.r : L_sdfMask.r;
 
-        float normalizedFdotL = .5*FdotL+.5;
+        float normalizedFdotL = (.5*FdotL)+.5;
         factor = 1.-smoothstep(faceShadowMap-_ShadowEdgeSmoothness, faceShadowMap+_ShadowEdgeSmoothness, normalizedFdotL);
     }
     else{

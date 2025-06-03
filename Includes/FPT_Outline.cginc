@@ -8,7 +8,12 @@
 #include "FPT_Core.cginc"
 
 float4 CalculateOutlineVertex(half3 normalOS, float2 uv, float4 vertex, fixed width){
-    float3 norm = normalize(mul((float3x3)UNITY_MATRIX_IT_MV, normalOS));
+    float3 normalWS = UnityObjectToWorldNormal(normalOS);
+    float3 norm = mul((float3x3)UNITY_MATRIX_V, normalWS);
+    
+    float normLength = length(norm);
+    norm = normLength > 0.0001 ? norm / normLength : float3(0, 0, 1);
+
     fixed4 outlineMask = tex2Dlod(_OutlineMask, float4(uv.xy, 0., 0.));
     float2 offset = TransformViewToProjection(norm.xy)*outlineMask.r;
 
