@@ -45,6 +45,19 @@ float2 CalculateOffsetVectorNormal(float3 normalOS, float2 uv){
     return offsetVector;
 }
 
+g2f vert_outlinebase(appdata v) {
+    g2f o;
+    o = vert_base(v);
+
+    // [OpenLit] Calculate and copy light datas
+    OpenLitLightDatas lightDatas;
+    ComputeLights(lightDatas, _LightDirectionOverride);
+    CorrectLights(lightDatas, _LightMinLimit, _LightMaxLimit, _MonochromeLighting, _AsOutlineUnlit);
+    PackLightDatas(o.lightDatas, lightDatas);
+
+    return o;
+}
+
 fixed4 frag_outline(g2f i) : SV_Target
 {
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
@@ -90,7 +103,7 @@ void geom_outline(triangle appdata IN[3], inout TriangleStream<g2f> stream) {
     // 1st Outline
     [unroll]for (int j = 0; j < 3; ++j) {
         appdata v = IN[j];
-        o = vert_main_pass(v);
+        o = vert_outlinebase(v);
         o.pos.xy += (offsets[j] * _OuterOutlineRatio * _OuterOutlineWidth);
         o.color = _OuterOutlineColor1st;
         UNITY_TRANSFER_FOG(o, o.pos);
@@ -102,7 +115,7 @@ void geom_outline(triangle appdata IN[3], inout TriangleStream<g2f> stream) {
     // 2nd Outline
     [unroll]for (int k = 0; k < 3; ++k) {
         appdata v = IN[k];
-        o = vert_main_pass(v);
+        o = vert_outlinebase(v);
         o.pos.xy += (offsets[k] * _OuterOutlineWidth);
         o.color = _OuterOutlineColor2nd;
         UNITY_TRANSFER_FOG(o, o.pos);

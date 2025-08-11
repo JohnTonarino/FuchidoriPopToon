@@ -256,7 +256,7 @@ Shader "FuchidoriPopToon/Transparent"
                 g2f o;
                 UNITY_INITIALIZE_OUTPUT(g2f, o);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
-                o = vert_main_pass(v);
+                o = vert_outlinebase(v);
                 o.pos.xy += (_VertexColorNormal == 1) ?
                     CalculateOffsetVectorVertex(v.color, v.normalOS, v.tangent, v.uv, v.vertex)*_InnerOutlineWidth:
                     CalculateOffsetVectorNormal(v.normalOS, v.uv)*_InnerOutlineWidth;
