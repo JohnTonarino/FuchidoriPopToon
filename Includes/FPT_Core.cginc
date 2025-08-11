@@ -151,5 +151,17 @@ g2f vert_base (appdata v)
     return o;
 }
 
+g2f vert_main_pass(appdata v)
+{
+    g2f o;
+    o = vert_base(v);
 
+    // [OpenLit] Calculate and copy light datas
+    OpenLitLightDatas lightDatas;
+    ComputeLights(lightDatas, _LightDirectionOverride);
+    CorrectLights(lightDatas, _LightMinLimit, _LightMaxLimit, _MonochromeLighting, _AsUnlit);
+    PackLightDatas(o.lightDatas, lightDatas);
+
+    return o;
+}
 #endif // FPT_CORE_INCLUDED
