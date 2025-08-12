@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.0.8
+// FuchidoriPopToon v 1.0.9
 // FPT_Core.cginc
 #ifndef FPT_CORE_INCLUDED
 #define FPT_CORE_INCLUDED
