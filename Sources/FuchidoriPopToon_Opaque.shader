@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.0.8
+// FuchidoriPopToon v 1.0.9
 Shader "FuchidoriPopToon/Opaque"
 {
     Properties
@@ -55,6 +55,7 @@ Shader "FuchidoriPopToon/Opaque"
         _OuterOutlineRatio("OuterOutlineRatio", Range(.01, 1.)) = .3
         _InnerOutlineWidth("InnerOutlineWidth", Float) = .0015
         _OutlineMask("OutlineMask", 2D) = "white" {}
+        [Toggle(_)] _VertexColorNormal("VertexColorNormal", Int) = 0
         _AsOutlineUnlit("As OutlineUnlit", Range(0,1)) = 0.5
 
         [Header(Transparent)]
@@ -67,9 +68,9 @@ Shader "FuchidoriPopToon/Opaque"
         _EmissiveTex("EmissiveTex", 2D) = "black" {}
         [HDR] _EmissiveColor("EmissiveColor", Color) = (1., 1., 1., 1.)
 
-        [Header(ExperimentalFeature)]
+        [Header(VRCLightVolumes)]
         [Space(10)]
-        [Toggle(_)] _VRCLightVolumesOn("VRCLightVolumes(Experimental)", Int) = 0
+        [Toggle(_)] _VRCLightVolumesOn("VRCLightVolumes", Int) = 0
         _VRCLightVolumesStrength("VRCLightVolumesStrength", Range(0., 1.)) = 1.
 
         //------------------------------------------------------------------------------------------------------------------------------
@@ -257,7 +258,10 @@ Shader "FuchidoriPopToon/Opaque"
                 g2f o;
                 UNITY_INITIALIZE_OUTPUT(g2f, o);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
-                o = vert_outlinebase(v, _InnerOutlineWidth);
+                o = vert_outlinebase(v);
+                o.pos.xy += (_VertexColorNormal == 1) ?
+                    CalculateOffsetVectorVertex(v.color, v.normalOS, v.tangent, v.uv, v.vertex)*_InnerOutlineWidth:
+                    CalculateOffsetVectorNormal(v.normalOS, v.uv)*_InnerOutlineWidth;
                 o.color = _InnerOutlineColor;
                 return o;
             }
@@ -304,7 +308,8 @@ Shader "FuchidoriPopToon/Opaque"
             {
                 v2f_shadow o;
                 TRANSFER_SHADOW_CASTER_NORMALOFFSET(o)
-                o.pos = CalculateOutlineVertex(v.normal, v.texcoord.xy, v.vertex, _OuterOutlineWidth);
+                o.pos = UnityObjectToClipPos(v.vertex);
+                o.pos.xy += CalculateOffsetVectorNormal(v.normal, v.texcoord.xy)*_OuterOutlineWidth;
                 o.uv = v.texcoord.xy;
                 o.screenPos = ComputeScreenPos(o.pos);
                 return o;

@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.0.8
+// FuchidoriPopToon v 1.0.9
 // FPT_Lighting.cginc
 #ifndef FPT_LIGHTING_INCLUDED
 #define FPT_LIGHTING_INCLUDED
@@ -26,20 +26,6 @@ fixed3 lv_SampleVolumes(fixed3 albedo, g2f i, float3 viewDir) {
     fixed3 LVEvaluate = LightVolumeEvaluate(i.normalWS, lv_L0, lv_L1r, lv_L1g, lv_L1b);
 
     return LVEvaluate * albedo;
-}
-
-g2f vert_main_pass(appdata v)
-{
-    g2f o;
-    o = vert_base(v);
-
-    // [OpenLit] Calculate and copy light datas
-    OpenLitLightDatas lightDatas;
-    ComputeLights(lightDatas, _LightDirectionOverride);
-    CorrectLights(lightDatas, _LightMinLimit, _LightMaxLimit, _MonochromeLighting, _AsUnlit);
-    PackLightDatas(o.lightDatas, lightDatas);
-
-    return o;
 }
 
 fixed3 CalculateShadow(g2f i, float3 N, float3 L, float NdotL){
