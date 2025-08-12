@@ -53,6 +53,7 @@ fixed _OuterOutlineWidth;
 fixed _InnerOutlineWidth;
 half   _OutlineWidth;
 sampler2D _OutlineMask;
+uint _VertexColorNormal;
 half   _AsOutlineUnlit;
 
 sampler2D _TransparentMask;
@@ -84,8 +85,9 @@ struct appdata
     float4 vertex : POSITION;
     float2 uv : TEXCOORD0;
     float2 uv1 : TEXCOORD1;
-    half3 normalOS : NORMAL;
-    half4 tangent : TANGENT;
+    float3 normalOS : NORMAL;
+    float4 tangent : TANGENT;
+    fixed4 color : COLOR;
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
@@ -95,8 +97,6 @@ struct g2f
     float3 positionWS : TEXCOORD0;
     float2 uv : TEXCOORD1;
     float3 normalWS : TEXCOORD2;
-
-    fixed4 color : COLOR;
 
     // [OpenLit] Add light datas
     nointerpolation uint3 lightDatas : TEXCOORD3;
@@ -110,6 +110,8 @@ struct g2f
     half3 tangent : TEXCOORD9;
     half3 binormal : TEXCOORD10;
     half2 viewUV : TEXCOORD11;
+
+    fixed4 color : TEXCOORD12;
 };
 
 struct v2f_shadow {
@@ -149,5 +151,17 @@ g2f vert_base (appdata v)
     return o;
 }
 
+g2f vert_main_pass(appdata v)
+{
+    g2f o;
+    o = vert_base(v);
 
+    // [OpenLit] Calculate and copy light datas
+    OpenLitLightDatas lightDatas;
+    ComputeLights(lightDatas, _LightDirectionOverride);
+    CorrectLights(lightDatas, _LightMinLimit, _LightMaxLimit, _MonochromeLighting, _AsUnlit);
+    PackLightDatas(o.lightDatas, lightDatas);
+
+    return o;
+}
 #endif // FPT_CORE_INCLUDED
