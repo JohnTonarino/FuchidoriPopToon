@@ -27,6 +27,8 @@ Shader "FuchidoriPopToon/Transparent"
         _SpecularStrength("SpecularStrength",Range(0., 1.)) = 0.
         _SpecularBias("SpecularBias",Range(0., 1.)) = 0.5
         _Smoothness("Smoothness", Range(0.,1.)) = 0.5
+        _SpecPatternTex   ("Spec Pattern Tex", 2D) = "white" {}
+        _SpecPatternScale ("Spec Pattern Scale", Float) = 1.0
 
         [Header(Shadow)]
         [Space(10)]
@@ -38,12 +40,16 @@ Shader "FuchidoriPopToon/Transparent"
         _ShadowStrength("ShadowStrength",Range(0., 1.)) = 0.5
         [Toggle(_)] _SDFOn("SDF", Int) = 0
         _SDFMaskTex ("SDFMaskTex", 2D) = "white" {}
+        _ShadowPatternTex      ("Shadow Pattern Tex", 2D) = "white" {}
+        _ShadowPatternScale    ("Shadow Pattern Scale", Float) = 1.0
 
         [Header(RimColor)]
         [Space(10)]
         _RimColor("RimLightColor", Color) = (1., 1., 1., 1.)
         _RimLightStrength("RimLightStrength", Range(0., 1.)) = .5
         _RimLightMask("RimLightMask", 2D) = "white" {}
+        _RimPatternTex      ("Rim Pattern Tex", 2D) = "white" {}
+        _RimPatternScale    ("Rim Pattern Scale", Float) = 1.0
 
         [Header(Outline)]
         [Space(10)]
@@ -149,9 +155,9 @@ Shader "FuchidoriPopToon/Transparent"
 
                 fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
                 fixed3 albedo = col.rgb;
-                col.rgb += fpt_specular(L, -viewDir, N);
+                col.rgb += fpt_specular(i.positionWS, L, -viewDir, N);
 
-                CalculateMaterialEffects(col, i, viewDir);
+                CalculateMaterialEffects(col, i, viewDir, N);
 
                 col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);
                 if(_VRCLightVolumesOn){
@@ -204,7 +210,7 @@ Shader "FuchidoriPopToon/Transparent"
 
                 fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
 
-                CalculateMaterialEffects(col, i, viewDir);
+                CalculateMaterialEffects(col, i, viewDir, N);
                 col.rgb *= lerp(0., OPENLIT_LIGHT_COLOR, factor*attenuation);
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
