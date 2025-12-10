@@ -7,15 +7,34 @@
 
 #include "FPT_Core.cginc"
 
-fixed fpt_rimLighting(float2 INuv, float4 INscreenPos, float3 viewDir, float3 normalWS) {
-    float2 viewportPos = INscreenPos.xy / INscreenPos.w;
-    float2 screenPos = viewportPos * _ScreenParams.xy;
-    fixed4 rimLightMask = tex2D(_RimLightMask, INuv);
-    return lerp(0., pow(1. - saturate(dot(viewDir, normalWS)), 2.), _RimLightStrength) * rimLightMask.x;
+float2 TriplanarUV3D(float3 worldPos, float3 normal, float scale) {
+    float3 localPos = mul(unity_WorldToObject, float4(worldPos, 1.0)).xyz;
+    float3 localNormal = UnityWorldToObjectDir(normal);
+    float3 n = abs(normalize(localNormal));
+
+    // 前後面
+    if (n.z >= n.x && n.z >= n.y) { return localPos.xy * scale; }
+    // 左右面
+    else if (n.x >= n.y) { return float2(localPos.z, localPos.y) * scale; }
+    // 上下面
+    else { return float2(localPos.x, localPos.z) * scale; }
 }
-float fpt_specular(float3 L, float3 viewDir, float3 N){
+fixed fpt_rimLighting(float3 worldPos, float2 uv, float3 viewDir, float3 N) {
+    fixed4 rimLightMask = tex2D(_RimLightMask, uv);
+
+    float2 rimUV  = TriplanarUV3D(worldPos, N, _RimPatternScale);
+    float  rimPat = tex2D(_RimPatternTex, rimUV).r;
+
+    return pow(1. - saturate(dot(viewDir, N)), 2.) * _RimLightStrength * rimLightMask.x*rimPat;
+}
+float fpt_specular(float3 worldPos, float3 L, float3 viewDir, float3 N){
     float3 H = normalize(L-viewDir);
-    return _SpecularStrength*max(0.,smoothstep( _SpecularBias - .02, _SpecularBias + .02, dot(N, H)));
+    float NH = saturate(dot(N,H));
+
+    float2 specUV   = TriplanarUV3D(worldPos, N, _SpecPatternScale);
+    float  specPat  = tex2D(_SpecPatternTex, specUV).r;
+
+    return _SpecularStrength*specPat*smoothstep( _SpecularBias - .02, _SpecularBias + .02, NH);
 }
 fixed3 lv_SampleVolumes(fixed3 albedo, g2f i, float3 viewDir) {
     // VRC Light Volumes
@@ -36,8 +55,7 @@ fixed3 CalculateShadow(g2f i, float3 N, float3 L, float NdotL){
     float  shadowBlend = smoothstep(NdotL-_ShadowEdgeSmoothness, NdotL+_ShadowEdgeSmoothness, NdotL*NdotL-_ShadowWidth);
     fixed3 shadowColor = lerp(shadowColor1st.rgb, shadowColor2nd.rgb, shadowBlend);
 
-    fixed3 factor = 0.;
-    float factorBlend = 0.;
+    float lightIntensity = 0.;
 
     if(_SDFOn){
         half3 right = unity_ObjectToWorld._m00_m10_m20;
@@ -52,22 +70,30 @@ fixed3 CalculateShadow(g2f i, float3 N, float3 L, float NdotL){
         half4 R_sdfMask = tex2D(_SDFMaskTex, float2(1.-i.uv.x,i.uv.y));
         half4 L_sdfMask  = tex2D(_SDFMaskTex, i.uv);
 
-        half faceShadowMap = RdotL < 0.? R_sdfMask.r : L_sdfMask.r;
+        half faceShadowThreshold = RdotL < 0.? R_sdfMask.r : L_sdfMask.r;
 
         float normalizedFdotL = (.5*FdotL)+.5;
-        factor = 1.-smoothstep(faceShadowMap-_ShadowEdgeSmoothness, faceShadowMap+_ShadowEdgeSmoothness, normalizedFdotL);
+        lightIntensity = 1.-smoothstep(faceShadowThreshold-_ShadowEdgeSmoothness, faceShadowThreshold+_ShadowEdgeSmoothness, normalizedFdotL);
     }
     else{
-        factor = NdotL;
+        lightIntensity = NdotL;
     }
-    factorBlend = smoothstep(_ShadowThreshold-_ShadowEdgeSmoothness, _ShadowThreshold+_ShadowEdgeSmoothness, factor);
-    factor = lerp(shadowColor, 1., factorBlend);
-    factor = lerp(1., factor, _ShadowStrength);
 
-    return factor;
+    float q = fwidth(lightIntensity);
+    float e = max(_ShadowEdgeSmoothness, q);
+
+    float litFactor = smoothstep(_ShadowThreshold - e, _ShadowThreshold + e, lightIntensity);
+    
+    float2 shUV = TriplanarUV3D(i.positionWS, N, _ShadowPatternScale);
+    float  shPat  = tex2D(_ShadowPatternTex, shUV).r;
+    float finalMask = 1. - shPat * (1. - litFactor);
+
+    fixed3 finalColor = 0.;
+    finalColor = lerp(shadowColor, fixed3(1.,1.,1.), finalMask);
+    return lerp(fixed3(1.,1.,1.), finalColor, _ShadowStrength);
 }
 
-void CalculateMaterialEffects(inout fixed4 col, g2f i, float3 viewDir) {
+void CalculateMaterialEffects(inout fixed4 col, g2f i, float3 viewDir, float3 N) {
     // MatCap
     fixed4 matcap = tex2D(_MatCap, i.viewUV) * tex2D(_MatCapMask, i.uv);
     col.rgb = _MatCapType==0?
@@ -75,7 +101,7 @@ void CalculateMaterialEffects(inout fixed4 col, g2f i, float3 viewDir) {
                 col.rgb*lerp(1., matcap.rgb, _MatCapStrength);
 
     // RimLighting
-    fixed rim = fpt_rimLighting(i.uv, i.screenPos, viewDir, i.normalWS);
+    fixed rim = fpt_rimLighting(i.positionWS, i.uv, viewDir, N);
     col.rgb = lerp(col.rgb, col.rgb*_RimColor.rgb, rim);
 
     // alpha

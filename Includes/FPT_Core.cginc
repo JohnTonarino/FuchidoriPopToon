@@ -14,70 +14,79 @@
 #define PI 3.141592
 
 sampler2D _MainTex;
-float4 _MainTex_ST;
-int _StencilRef;
-fixed4 _MainTexOverlayColor;
+float4    _MainTex_ST;
+int       _StencilRef;
+fixed4    _MainTexOverlayColor;
 
-half _BumpScale;
+half      _BumpScale;
 sampler2D _BumpMap;
-float4 _BumpMap_ST;
+float4    _BumpMap_ST;
 
-uint _MatCapType;
+uint      _MatCapType;
 sampler2D _MatCap;
-half _MatCapStrength;
+half      _MatCapStrength;
 sampler2D _MatCapMask;
 
-half _SpecularStrength;
-half _SpecularBias;
-half _Smoothness;
+half      _SpecularStrength;
+half      _SpecularBias;
+half      _Smoothness;
+sampler2D _SpecPatternTex;
+float4    _SpecPatternTex_ST;
+float     _SpecPatternScale;
 
 sampler2D _ShadowTex;
-fixed4 _ShadowOverlayColor1st;
-fixed4 _ShadowOverlayColor2nd;
-half _ShadowWidth;
-half _ShadowEdgeSmoothness;
-half _ShadowStrength;
-uint _SDFOn;
+fixed4    _ShadowOverlayColor1st;
+fixed4    _ShadowOverlayColor2nd;
+half      _ShadowWidth;
+half      _ShadowEdgeSmoothness;
+half      _ShadowStrength;
+uint      _SDFOn;
 sampler2D _SDFMaskTex;
-float4 _SDFMaskTex_ST;
+float4    _SDFMaskTex_ST;
+sampler2D _ShadowPatternTex;
+float4    _ShadowPatternTex_ST;
+float     _ShadowPatternScale;
 
-fixed4 _RimColor;
-half _RimLightStrength;
+fixed4    _RimColor;
+half      _RimLightStrength;
 sampler2D _RimLightMask;
+sampler2D _RimPatternTex;
+float4    _RimPatternTex_ST;
+float     _RimPatternScale;
 
-fixed4 _OuterOutlineColor1st;
-fixed4 _OuterOutlineColor2nd;
-fixed4 _InnerOutlineColor;
-fixed _OuterOutlineRatio;
-fixed _OuterOutlineWidth;
-fixed _InnerOutlineWidth;
-half   _OutlineWidth;
+fixed4    _OuterOutlineColor1st;
+fixed4    _OuterOutlineColor2nd;
+fixed4    _InnerOutlineColor;
+fixed     _OuterOutlineRatio;
+fixed     _OuterOutlineWidth;
+fixed     _InnerOutlineWidth;
+half      _OutlineWidth;
 sampler2D _OutlineMask;
-uint _VertexColorNormal;
-half   _AsOutlineUnlit;
+uint      _VertexColorNormal;
+half      _AsOutlineUnlit;
 
 sampler2D _TransparentMask;
-half _TransparentLevel;
+half      _TransparentLevel;
 
 sampler2D _EmissiveTex;
-float4 _EmissiveColor;
+float4    _EmissiveColor;
 
-uint _VRCLightVolumesOn;
-half _VRCLightVolumesStrength;
+uint      _VRCLightVolumesOn;
+half      _VRCLightVolumesStrength;
 
 // [OpenLit] Properties for lighting
-float _LightIntensity;
-uint _ReceiveShadow;
+float     _LightIntensity;
+uint      _ReceiveShadow;
 
-float   _AsUnlit;
-float   _LightMinLimit;
-float   _LightMaxLimit;
-float   _BeforeExposureLimit;
-float   _MonochromeLighting;
-float   _AlphaBoostFA;
-float4  _LightDirectionOverride;
+float     _AsUnlit;
+float     _LightMinLimit;
+float     _LightMaxLimit;
+float     _BeforeExposureLimit;
+float     _MonochromeLighting;
+float     _AlphaBoostFA;
+float4    _LightDirectionOverride;
 
-float _ShadowThreshold;
+float     _ShadowThreshold;
 //---
 
 struct appdata
@@ -106,12 +115,11 @@ struct g2f
         float3 vertexLight  : TEXCOORD7;
 #endif
     UNITY_VERTEX_OUTPUT_STEREO
-    float4 screenPos : TEXCOORD8;
-    half3 tangent : TEXCOORD9;
-    half3 binormal : TEXCOORD10;
-    half2 viewUV : TEXCOORD11;
+    half3 tangent : TEXCOORD8;
+    half3 binormal : TEXCOORD9;
+    half2 viewUV : TEXCOORD10;
 
-    fixed4 color : TEXCOORD12;
+    fixed4 color : TEXCOORD11;
 };
 
 struct v2f_shadow {
@@ -132,7 +140,6 @@ g2f vert_base (appdata v)
     o.uv = v.uv;
     o.normalWS = UnityObjectToWorldNormal(v.normalOS);
 
-    o.screenPos = ComputeScreenPos(o.pos);
     o.tangent = normalize(mul(unity_ObjectToWorld, v.tangent)).xyz;
     o.binormal = normalize(mul(unity_ObjectToWorld, cross(v.normalOS, v.tangent) * v.tangent.w));
 
