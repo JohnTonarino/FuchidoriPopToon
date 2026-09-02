@@ -47,7 +47,27 @@ fixed3 lv_SampleVolumes(fixed3 albedo, g2f i, float3 viewDir) {
     return LVEvaluate * albedo;
 }
 
-fixed3 CalculateShadow(g2f i, float3 N, float3 L, float NdotL){
+inline half FPT_SDFFaceLitFactor(float2 uv, half3 lightDirection)
+{
+    half3 objectRight = normalize(unity_ObjectToWorld._m00_m10_m20);
+    half3 objectForward = normalize(unity_ObjectToWorld._m02_m12_m22);
+    half rightDotLight = dot(objectRight.xz, lightDirection.xz);
+    half forwardDotLight = dot(objectForward.xz, lightDirection.xz);
+
+    half sdfRight = tex2D(_SDFMaskTex, float2(1.0 - uv.x, uv.y)).r;
+    half sdfLeft = tex2D(_SDFMaskTex, uv).r;
+    half sdfThreshold = rightDotLight < 0.0h ? sdfRight : sdfLeft;
+    half directionalValue = forwardDotLight * 0.5h + 0.5h;
+
+    return 1.0h - smoothstep(
+        sdfThreshold - _ShadowEdgeSmoothness,
+        sdfThreshold + _ShadowEdgeSmoothness,
+        directionalValue
+    );
+}
+
+fixed3 CalculateShadow(g2f i, float3 N, float3 L){
+    float NdotL = dot(N, L);
     fixed4 shadowTexColor = tex2D(_ShadowTex, i.uv);
     fixed4 shadowColor1st = shadowTexColor * _ShadowOverlayColor1st;
     fixed4 shadowColor2nd = shadowTexColor * _ShadowOverlayColor2nd;
@@ -58,22 +78,7 @@ fixed3 CalculateShadow(g2f i, float3 N, float3 L, float NdotL){
     float lightIntensity = 0.;
 
     if(_SDFOn){
-        half3 right = unity_ObjectToWorld._m00_m10_m20;
-        half3 up = unity_ObjectToWorld._m01_m11_m21;
-        half3 forward = unity_ObjectToWorld._m02_m12_m22;
-        // Up or not
-        half isUpright = (up.y - L.y) < 0.? 1.:-1.;
-        
-        half FdotL = dot(forward.xz, L.xz)*isUpright;
-        half RdotL = dot(right.xz, L.xz)*isUpright;
-
-        half4 R_sdfMask = tex2D(_SDFMaskTex, float2(1.-i.uv.x,i.uv.y));
-        half4 L_sdfMask  = tex2D(_SDFMaskTex, i.uv);
-
-        half faceShadowThreshold = RdotL < 0.? R_sdfMask.r : L_sdfMask.r;
-
-        float normalizedFdotL = (.5*FdotL)+.5;
-        lightIntensity = 1.-smoothstep(faceShadowThreshold-_ShadowEdgeSmoothness, faceShadowThreshold+_ShadowEdgeSmoothness, normalizedFdotL);
+        lightIntensity = FPT_SDFFaceLitFactor(i.uv, L);
     }
     else{
         lightIntensity = NdotL;
