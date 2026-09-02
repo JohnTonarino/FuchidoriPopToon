@@ -63,6 +63,9 @@ fixed4 frag_outline(g2f i) : SV_Target
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
     UNITY_LIGHT_ATTENUATION(attenuation, i, i.positionWS);
 
+    half alpha = FPT_Alpha(i.uv);
+    clip(alpha - _TransparentLevel);
+
     // Lighting
     // [OpenLit] Copy light datas from the input
     OpenLitLightDatas lightDatas;

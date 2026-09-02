@@ -130,6 +130,10 @@ struct v2f_shadow {
     float4 screenPos : TEXCOORD2;
 };
 
+inline half FPT_Alpha(float2 uv)
+{
+    return tex2D(_MainTex, uv).a * dot(tex2D(_TransparentMask, uv).rgb, half3(0.299h, 0.587h, 0.114h));
+}
 g2f vert_base (appdata v)
 {
     g2f o;

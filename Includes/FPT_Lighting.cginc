@@ -123,15 +123,4 @@ inline half3 FPT_Rim(float3 worldPos, half3 baseColor, float2 uv, half3 normalWS
 
     return 1.0h - (1.0h - baseColor.rgb) * (1.0h - _RimColor * rim) * rimPat;
 }
-
-void CalculateMaterialEffects(inout fixed4 col, g2f i, float3 viewDir, float3 N) {
-    // alpha
-    fixed4 alphaMask = tex2D(_TransparentMask, i.uv);
-    col.a *= OpenLitGray(alphaMask.rgb);
-    if (col.a < _TransparentLevel) discard;
-
-    // // emissive
-    // fixed4 emissiveTex = tex2D(_EmissiveTex, i.uv);
-    // col.rgb += emissiveTex.rgb * _EmissiveColor;
-}
 #endif // FPT_LIGHTING_INCLUDED

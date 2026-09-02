@@ -161,7 +161,6 @@ Shader "FuchidoriPopToon/Opaque"
                 col.rgb = FPT_MatCap(col, i.uv, N);
                 col.rgb = FPT_Rim(i.positionWS, col.rgb, i.uv, i.normalWS, viewDir);
 
-                CalculateMaterialEffects(col, i, viewDir, N);
                 col.rgb += tex2D(_EmissiveTex, i.uv).rgb * _EmissiveColor.rgb;
 
                 col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);
@@ -215,7 +214,6 @@ Shader "FuchidoriPopToon/Opaque"
 
                 fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
 
-                CalculateMaterialEffects(col, i, viewDir, N);
                 col.rgb *= lerp(0., OPENLIT_LIGHT_COLOR, factor*attenuation);
 
                 UNITY_APPLY_FOG(i.fogCoord, col);

@@ -140,6 +140,9 @@ Shader "FuchidoriPopToon/Transparent"
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
                 UNITY_LIGHT_ATTENUATION(attenuation, i, i.positionWS);
 
+                half alpha = FPT_Alpha(i.uv);
+                clip(alpha - _TransparentLevel);
+
                 float3 viewDir = normalize(_WorldSpaceCameraPos.xyz-i.positionWS);
 
                 // Lighting
@@ -161,7 +164,6 @@ Shader "FuchidoriPopToon/Transparent"
                 col.rgb = FPT_MatCap(col, i.uv, N);
                 col.rgb = FPT_Rim(i.positionWS, col.rgb, i.uv, i.normalWS, viewDir);
 
-                CalculateMaterialEffects(col, i, viewDir, N);
                 col.rgb += tex2D(_EmissiveTex, i.uv).rgb * _EmissiveColor.rgb;
 
                 col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);
@@ -173,6 +175,7 @@ Shader "FuchidoriPopToon/Transparent"
                 col.rgb += albedo * i.vertexLight;
                 col.rgb = min(col.rgb, albedo.rgb * _LightMaxLimit);
 #endif
+                col = fixed4(saturate(col.rgb), alpha);
                 UNITY_APPLY_FOG(i.fogCoord, col);
 
                 return col;
@@ -199,6 +202,9 @@ Shader "FuchidoriPopToon/Transparent"
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
                 UNITY_LIGHT_ATTENUATION(attenuation, i, i.positionWS);
 
+                half alpha = FPT_Alpha(i.uv);
+                clip(alpha - _TransparentLevel);
+
                 float3 viewDir = normalize(_WorldSpaceCameraPos.xyz - i.positionWS);
 
                 // Lighting
@@ -214,7 +220,6 @@ Shader "FuchidoriPopToon/Transparent"
 
                 fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
 
-                CalculateMaterialEffects(col, i, viewDir, N);
                 col.rgb *= lerp(0., OPENLIT_LIGHT_COLOR, factor*attenuation);
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
@@ -297,6 +302,8 @@ Shader "FuchidoriPopToon/Transparent"
             }
             float4 frag(v2f_shadow i) : SV_Target
             {
+                half alpha = FPT_Alpha(i.uv);
+                clip(alpha - _TransparentLevel);
                 SHADOW_CASTER_FRAGMENT(i)
             }
             ENDCG
@@ -324,6 +331,8 @@ Shader "FuchidoriPopToon/Transparent"
             }
             float4 frag(v2f_shadow i) : SV_Target
             {
+                half alpha = FPT_Alpha(i.uv);
+                clip(alpha - _TransparentLevel);
                 SHADOW_CASTER_FRAGMENT(i)
             }
             ENDCG
