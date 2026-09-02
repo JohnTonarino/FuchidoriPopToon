@@ -49,6 +49,8 @@ float     _ShadowPatternScale;
 
 fixed4    _RimColor;
 half      _RimLightStrength;
+half      _RimPower;
+half      _RimSmoothness;
 sampler2D _RimLightMask;
 sampler2D _RimPatternTex;
 float4    _RimPatternTex_ST;

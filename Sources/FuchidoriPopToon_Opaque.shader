@@ -47,6 +47,8 @@ Shader "FuchidoriPopToon/Opaque"
         [Space(10)]
         _RimColor("RimLightColor", Color) = (1., 1., 1., 1.)
         _RimLightStrength("RimLightStrength", Range(0., 1.)) = .5
+        _RimPower("RimLightPower", Range(0.25, 8.0)) = 2.0
+        _RimSmoothness("RimSmoothness", Range(0.001, 0.49)) = 0.08
         _RimLightMask("RimLightMask", 2D) = "white" {}
         _RimPatternTex      ("Rim Pattern Tex", 2D) = "white" {}
         _RimPatternScale    ("Rim Pattern Scale", Float) = 1.0
@@ -157,6 +159,8 @@ Shader "FuchidoriPopToon/Opaque"
                 col.rgb += fpt_specular(i.positionWS, L, -viewDir, N);
 
                 col.rgb = FPT_MatCap(col, i.uv, N);
+                col.rgb = FPT_Rim(i.positionWS, col.rgb, i.uv, i.normalWS, viewDir);
+
                 CalculateMaterialEffects(col, i, viewDir, N);
 
                 col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);

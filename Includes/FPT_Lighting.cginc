@@ -19,14 +19,6 @@ float2 TriplanarUV3D(float3 worldPos, float3 normal, float scale) {
     // 上下面
     else { return float2(localPos.x, localPos.z) * scale; }
 }
-fixed fpt_rimLighting(float3 worldPos, float2 uv, float3 viewDir, float3 N) {
-    fixed4 rimLightMask = tex2D(_RimLightMask, uv);
-
-    float2 rimUV  = TriplanarUV3D(worldPos, N, _RimPatternScale);
-    float  rimPat = tex2D(_RimPatternTex, rimUV).r;
-
-    return pow(1. - saturate(dot(viewDir, N)), 2.) * _RimLightStrength * rimLightMask.x*rimPat;
-}
 float fpt_specular(float3 worldPos, float3 L, float3 viewDir, float3 N){
     float3 H = normalize(L-viewDir);
     float NH = saturate(dot(N,H));
@@ -118,11 +110,21 @@ inline half3 FPT_MatCap(float3 baseColor, float2 uv, half3 normalWS)
     }
 }
 
-void CalculateMaterialEffects(inout fixed4 col, g2f i, float3 viewDir, float3 N) {
-    // RimLighting
-    fixed rim = fpt_rimLighting(i.positionWS, i.uv, viewDir, N);
-    col.rgb = lerp(col.rgb, col.rgb*_RimColor.rgb, rim);
+inline half3 FPT_Rim(float3 worldPos, half3 baseColor, float2 uv, half3 normalWS, half3 viewDirection)
+{
+    half rimBase = 1.0h - saturate(dot(normalWS, viewDirection));
+    half rimShape = pow(max(rimBase, 0.0001h), max(_RimPower, 0.0001h));
 
+    half rim = smoothstep(0.5h - _RimSmoothness, 0.5h + _RimSmoothness, rimShape);
+    rim *= tex2D(_RimLightMask, uv).r * _RimLightStrength;
+
+    float2 rimUV  = TriplanarUV3D(worldPos, normalWS, _RimPatternScale);
+    half rimPat = tex2D(_RimPatternTex, rimUV).r;
+
+    return 1.0h - (1.0h - baseColor.rgb) * (1.0h - _RimColor * rim) * rimPat;
+}
+
+void CalculateMaterialEffects(inout fixed4 col, g2f i, float3 viewDir, float3 N) {
     // alpha
     fixed4 alphaMask = tex2D(_TransparentMask, i.uv);
     col.a *= OpenLitGray(alphaMask.rgb);
