@@ -162,6 +162,7 @@ Shader "FuchidoriPopToon/Transparent"
                 col.rgb = FPT_Rim(i.positionWS, col.rgb, i.uv, i.normalWS, viewDir);
 
                 CalculateMaterialEffects(col, i, viewDir, N);
+                col.rgb += tex2D(_EmissiveTex, i.uv).rgb * _EmissiveColor.rgb;
 
                 col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);
                 if(_VRCLightVolumesOn){

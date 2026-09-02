@@ -130,8 +130,8 @@ void CalculateMaterialEffects(inout fixed4 col, g2f i, float3 viewDir, float3 N)
     col.a *= OpenLitGray(alphaMask.rgb);
     if (col.a < _TransparentLevel) discard;
 
-    // emissive
-    fixed4 emissiveTex = tex2D(_EmissiveTex, i.uv);
-    col.rgb += emissiveTex.rgb * _EmissiveColor;
+    // // emissive
+    // fixed4 emissiveTex = tex2D(_EmissiveTex, i.uv);
+    // col.rgb += emissiveTex.rgb * _EmissiveColor;
 }
 #endif // FPT_LIGHTING_INCLUDED
