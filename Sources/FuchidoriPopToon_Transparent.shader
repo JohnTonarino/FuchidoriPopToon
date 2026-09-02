@@ -156,6 +156,7 @@ Shader "FuchidoriPopToon/Transparent"
                 fixed3 albedo = col.rgb;
                 col.rgb += fpt_specular(i.positionWS, L, -viewDir, N);
 
+                col.rgb = FPT_MatCap(col, i.uv, N);
                 CalculateMaterialEffects(col, i, viewDir, N);
 
                 col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);

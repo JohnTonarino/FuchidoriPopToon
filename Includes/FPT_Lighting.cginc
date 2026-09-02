@@ -98,13 +98,27 @@ fixed3 CalculateShadow(g2f i, float3 N, float3 L){
     return lerp(fixed3(1.,1.,1.), finalColor, _ShadowStrength);
 }
 
-void CalculateMaterialEffects(inout fixed4 col, g2f i, float3 viewDir, float3 N) {
-    // MatCap
-    fixed4 matcap = tex2D(_MatCap, i.viewUV) * tex2D(_MatCapMask, i.uv);
-    col.rgb = _MatCapType==0?
-                lerp(col.rgb, matcap.rgb, _MatCapStrength):
-                col.rgb*lerp(1., matcap.rgb, _MatCapStrength);
+inline half3 FPT_MatCap(float3 baseColor, float2 uv, half3 normalWS)
+{
+    half3 normalVS = mul((half3x3)UNITY_MATRIX_V, normalWS);
+    float2 matCapUV = normalVS.xy * 0.5 + 0.5;
+    half3 matCap = tex2D(_MatCap, matCapUV).rgb;
+    half mask = tex2D(_MatCapMask, uv).r * _MatCapStrength;
 
+    if (_MatCapType == 1)
+    {
+        return baseColor * (half3(1.0h, 1.0h, 1.0h) + matCap * mask);
+    }
+    else
+    {
+        // Lerp: black is transparent, MatCap RGB is the visible color
+        half matCapLevel = max(matCap.r, max(matCap.g, matCap.b));
+        half amount = (matCapLevel * mask);
+        return baseColor * (1.0h - amount) + matCap * mask;
+    }
+}
+
+void CalculateMaterialEffects(inout fixed4 col, g2f i, float3 viewDir, float3 N) {
     // RimLighting
     fixed rim = fpt_rimLighting(i.positionWS, i.uv, viewDir, N);
     col.rgb = lerp(col.rgb, col.rgb*_RimColor.rgb, rim);
