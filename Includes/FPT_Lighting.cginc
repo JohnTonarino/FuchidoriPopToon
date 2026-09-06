@@ -25,15 +25,21 @@ inline void FPT_UnpackOpenLitData(g2f i, out OpenLitLightDatas lightDatas)
     UnpackLightDatas(lightDatas, i.lightDatas);
 }
 
-float fpt_specular(float3 worldPos, float3 L, float3 viewDir, float3 N){
-    float3 H = normalize(L-viewDir);
-    float NH = saturate(dot(N,H));
+inline half3 FPT_Specular(float3 worldPos, half3 normalWS, half3 lightDirection, half3 viewDirection)
+{
+    half3 halfDirection = normalize(lightDirection + viewDirection);
+    half normalHalf = saturate(dot(normalWS, halfDirection));
 
-    float2 specUV   = TriplanarUV3D(worldPos, N, _SpecPatternScale);
+    float2 specUV   = TriplanarUV3D(worldPos, normalWS, _SpecPatternScale);
     float  specPat  = tex2D(_SpecPatternTex, specUV).r;
 
-    return _SpecularStrength*specPat*smoothstep( _SpecularBias - .02, _SpecularBias + .02, NH);
+    half aa   = fwidth(normalHalf);
+    half edge = max(max(_SpecularSmoothness, aa), 0.0001h);
+
+    half specular = smoothstep( _SpecularSize - edge, _SpecularSize + edge, normalHalf);
+    return _SpecularStrength*_SpecularColor.rgb*specPat*specular;
 }
+
 
 inline half FPT_SDFFaceLitFactor(float2 uv, half3 lightDirection)
 {

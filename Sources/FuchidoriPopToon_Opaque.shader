@@ -24,9 +24,10 @@ Shader "FuchidoriPopToon/Opaque"
 
         [Header(Specular)]
         [Space(10)]
+        _SpecularColor ("Specular Color", Color) = (1, 1, 1, 1)
         _SpecularStrength("SpecularStrength",Range(0., 1.)) = 0.
-        _SpecularBias("SpecularBias",Range(0., 1.)) = 0.5
-        _Smoothness("Smoothness", Range(0.,1.)) = 0.5
+        _SpecularSize ("Specular Size", Range(0, 1)) = 0.8
+        _SpecularSmoothness ("Specular Smoothness", Range(0.001, 0.25)) = 0.02
         _SpecPatternTex   ("Spec Pattern Tex", 2D) = "white" {}
         _SpecPatternScale ("Spec Pattern Scale", Float) = 1.0
 
@@ -139,7 +140,7 @@ Shader "FuchidoriPopToon/Opaque"
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
                 UNITY_LIGHT_ATTENUATION(attenuation, i, i.positionWS);
 
-                float3 viewDir = normalize(_WorldSpaceCameraPos.xyz-i.positionWS);
+                float3 viewDir = normalize(UnityWorldSpaceViewDir(i.positionWS));
 
                 // Lighting
                 // [OpenLit] Copy light datas from the input
@@ -157,7 +158,7 @@ Shader "FuchidoriPopToon/Opaque"
 
                 half3 color = FPT_BaseLighting(i, albedo, N, L, attenuation);
 
-                color += fpt_specular(i.positionWS, L, -viewDir, N);
+                color += FPT_Specular(i.positionWS, N, L, viewDir)*lightDatas.directLight*attenuation;
                 color += tex2D(_EmissiveTex, i.uv).rgb * _EmissiveColor.rgb;
 
 #if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH
@@ -191,7 +192,7 @@ Shader "FuchidoriPopToon/Opaque"
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
                 UNITY_LIGHT_ATTENUATION(attenuation, i, i.positionWS);
 
-                float3 viewDir = normalize(_WorldSpaceCameraPos.xyz - i.positionWS);
+                float3 viewDir = normalize(UnityWorldSpaceViewDir(i.positionWS));
 
                 // Lighting
                 // [OpenLit] Copy light datas from the input
