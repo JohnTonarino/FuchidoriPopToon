@@ -37,7 +37,8 @@ float     _SpecPatternScale;
 sampler2D _ShadowTex;
 fixed4    _ShadowOverlayColor1st;
 fixed4    _ShadowOverlayColor2nd;
-half      _ShadowWidth;
+half     _ShadowStep1;
+half      _ShadowStep2;
 half      _ShadowEdgeSmoothness;
 half      _ShadowStrength;
 uint      _SDFOn;
@@ -87,8 +88,6 @@ float     _BeforeExposureLimit;
 float     _MonochromeLighting;
 float     _AlphaBoostFA;
 float4    _LightDirectionOverride;
-
-float     _ShadowThreshold;
 //---
 
 struct appdata
