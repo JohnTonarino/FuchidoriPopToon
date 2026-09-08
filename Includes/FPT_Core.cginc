@@ -144,10 +144,12 @@ g2f vert_base (appdata v)
     o.pos = UnityObjectToClipPos(v.vertex);
     o.positionWS = mul(unity_ObjectToWorld, float4(v.vertex.xyz, 1.));
     o.uv = v.uv;
-    o.normalWS = UnityObjectToWorldNormal(v.normalOS);
+    float3 normalWS  = UnityObjectToWorldNormal(v.normalOS);
+    float3 tangentWS = normalize(UnityObjectToWorldDir(v.tangent.xyz));
 
-    o.tangent = normalize(mul(unity_ObjectToWorld, v.tangent)).xyz;
-    o.binormal = normalize(mul(unity_ObjectToWorld, cross(v.normalOS, v.tangent) * v.tangent.w));
+    o.normalWS = normalWS;
+    o.tangent = tangentWS;
+    o.binormal = normalize(cross(normalWS, tangentWS)) * v.tangent.w * unity_WorldTransformParams.w;
 
     float3 viewNormal = mul((float3x3)UNITY_MATRIX_V, UnityObjectToWorldNormal(v.normalOS));
     o.viewUV = viewNormal.xy * .5 + .5;
