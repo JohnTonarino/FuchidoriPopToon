@@ -159,12 +159,13 @@ Shader "FuchidoriPopToon/Opaque"
                 half3 color = FPT_BaseLighting(i, albedo, N, L, attenuation);
 
                 color += FPT_Specular(i.positionWS, N, L, viewDir)*lightDatas.directLight*attenuation;
-                color += tex2D(_EmissiveTex, i.uv).rgb * _EmissiveColor.rgb;
 
 #if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH
                 color += albedo * i.vertexLight;
                 color = min(color, albedo* _LightMaxLimit);
 #endif
+
+                color += tex2D(_EmissiveTex, i.uv).rgb * _EmissiveColor.rgb;
                 fixed4 result = fixed4(color, 1.0);
                 UNITY_APPLY_FOG(i.fogCoord, result);
 
