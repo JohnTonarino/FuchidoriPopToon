@@ -112,10 +112,7 @@ struct g2f
     // [OpenLit] Add light datas
     nointerpolation uint3 lightDatas : TEXCOORD3;
     UNITY_FOG_COORDS(4)
-        UNITY_LIGHTING_COORDS(5, 6)
-#if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH
-        float3 vertexLight  : TEXCOORD7;
-#endif
+    UNITY_LIGHTING_COORDS(5, 6)
     UNITY_VERTEX_OUTPUT_STEREO
     half3 tangent : TEXCOORD8;
     half3 binormal : TEXCOORD9;
@@ -157,11 +154,7 @@ g2f vert_base (appdata v)
     UNITY_TRANSFER_FOG(o, o.pos);
     UNITY_TRANSFER_LIGHTING(o, v.uv);
 
-    // [OpenLit] Calculate and copy vertex lighting
-#if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH && defined(VERTEXLIGHT_ON)
-    o.vertexLight = 0.;
-    o.vertexLight = min(o.vertexLight, _LightMaxLimit);
-#endif
+    // Additional vertex lights are intentionally ignored to preserve toon color bands.
 
     return o;
 }

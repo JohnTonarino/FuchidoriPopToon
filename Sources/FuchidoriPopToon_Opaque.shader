@@ -161,7 +161,6 @@ Shader "FuchidoriPopToon/Opaque"
                 color += FPT_Specular(i.positionWS, N, L, viewDir)*lightDatas.directLight*attenuation;
 
 #if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH
-                color += albedo * i.vertexLight;
                 color = min(color, albedo* _LightMaxLimit);
 #endif
 
