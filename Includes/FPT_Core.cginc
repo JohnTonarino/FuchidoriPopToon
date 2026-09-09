@@ -27,9 +27,10 @@ sampler2D _MatCap;
 half      _MatCapStrength;
 sampler2D _MatCapMask;
 
+fixed4    _SpecularColor;
 half      _SpecularStrength;
-half      _SpecularBias;
-half      _Smoothness;
+half      _SpecularSize;
+half      _SpecularSmoothness;
 sampler2D _SpecPatternTex;
 float4    _SpecPatternTex_ST;
 float     _SpecPatternScale;
@@ -37,7 +38,8 @@ float     _SpecPatternScale;
 sampler2D _ShadowTex;
 fixed4    _ShadowOverlayColor1st;
 fixed4    _ShadowOverlayColor2nd;
-half      _ShadowWidth;
+half      _ShadowStep1;
+half      _ShadowStep2;
 half      _ShadowEdgeSmoothness;
 half      _ShadowStrength;
 uint      _SDFOn;
@@ -49,6 +51,8 @@ float     _ShadowPatternScale;
 
 fixed4    _RimColor;
 half      _RimLightStrength;
+half      _RimPower;
+half      _RimSmoothness;
 sampler2D _RimLightMask;
 sampler2D _RimPatternTex;
 float4    _RimPatternTex_ST;
@@ -85,8 +89,6 @@ float     _BeforeExposureLimit;
 float     _MonochromeLighting;
 float     _AlphaBoostFA;
 float4    _LightDirectionOverride;
-
-float     _ShadowThreshold;
 //---
 
 struct appdata
@@ -110,10 +112,7 @@ struct g2f
     // [OpenLit] Add light datas
     nointerpolation uint3 lightDatas : TEXCOORD3;
     UNITY_FOG_COORDS(4)
-        UNITY_LIGHTING_COORDS(5, 6)
-#if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH
-        float3 vertexLight  : TEXCOORD7;
-#endif
+    UNITY_LIGHTING_COORDS(5, 6)
     UNITY_VERTEX_OUTPUT_STEREO
     half3 tangent : TEXCOORD8;
     half3 binormal : TEXCOORD9;
@@ -128,6 +127,10 @@ struct v2f_shadow {
     float4 screenPos : TEXCOORD2;
 };
 
+inline half FPT_Alpha(float2 uv)
+{
+    return tex2D(_MainTex, uv).a * dot(tex2D(_TransparentMask, uv).rgb, half3(0.299h, 0.587h, 0.114h));
+}
 g2f vert_base (appdata v)
 {
     g2f o;
@@ -138,10 +141,12 @@ g2f vert_base (appdata v)
     o.pos = UnityObjectToClipPos(v.vertex);
     o.positionWS = mul(unity_ObjectToWorld, float4(v.vertex.xyz, 1.));
     o.uv = v.uv;
-    o.normalWS = UnityObjectToWorldNormal(v.normalOS);
+    float3 normalWS  = UnityObjectToWorldNormal(v.normalOS);
+    float3 tangentWS = normalize(UnityObjectToWorldDir(v.tangent.xyz));
 
-    o.tangent = normalize(mul(unity_ObjectToWorld, v.tangent)).xyz;
-    o.binormal = normalize(mul(unity_ObjectToWorld, cross(v.normalOS, v.tangent) * v.tangent.w));
+    o.normalWS = normalWS;
+    o.tangent = tangentWS;
+    o.binormal = normalize(cross(normalWS, tangentWS)) * v.tangent.w * unity_WorldTransformParams.w;
 
     float3 viewNormal = mul((float3x3)UNITY_MATRIX_V, UnityObjectToWorldNormal(v.normalOS));
     o.viewUV = viewNormal.xy * .5 + .5;
@@ -149,11 +154,7 @@ g2f vert_base (appdata v)
     UNITY_TRANSFER_FOG(o, o.pos);
     UNITY_TRANSFER_LIGHTING(o, v.uv);
 
-    // [OpenLit] Calculate and copy vertex lighting
-#if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH && defined(VERTEXLIGHT_ON)
-    o.vertexLight = 0.;
-    o.vertexLight = min(o.vertexLight, _LightMaxLimit);
-#endif
+    // Additional vertex lights are intentionally ignored to preserve toon color bands.
 
     return o;
 }
