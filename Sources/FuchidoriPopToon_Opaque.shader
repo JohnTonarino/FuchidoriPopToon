@@ -201,7 +201,7 @@ Shader "FuchidoriPopToon/Opaque"
 
                 half3 normalmap = UnpackScaleNormal(tex2D(_BumpMap, i.uv), _BumpScale);
                 float3 N = normalize(i.tangent * normalmap.x + i.binormal * normalmap.y + i.normalWS * normalmap.z);
-                float3 L = lightDatas.lightDirection;
+                float3 L = normalize(UnityWorldSpaceLightDir(i.positionWS));
 
                 fixed3 albedo = tex2D(_MainTex, i.uv).rgb * _MainTexOverlayColor.rgb;
 
