@@ -128,8 +128,9 @@ inline half3 FPT_Rim(float3 worldPos, half3 baseColor, float2 uv, half3 normalWS
 
     float2 rimUV  = TriplanarUV3D(worldPos, normalWS, _RimPatternScale);
     half rimPat = tex2D(_RimPatternTex, rimUV).r;
+    rim *= rimPat;
 
-    return 1.0h - (1.0h - baseColor.rgb) * (1.0h - _RimColor * rim) * rimPat;
+    return 1.0h - (1.0h - baseColor.rgb) * (1.0h - _RimColor * rim);
 }
 
 inline half3 FPT_LightVolumeLighting(g2f i, half3 normalWS)
