@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.0.10
+// FuchidoriPopToon v 1.1.0
 Shader "FuchidoriPopToon/Opaque"
 {
     Properties
@@ -24,9 +24,10 @@ Shader "FuchidoriPopToon/Opaque"
 
         [Header(Specular)]
         [Space(10)]
+        _SpecularColor ("Specular Color", Color) = (1, 1, 1, 1)
         _SpecularStrength("SpecularStrength",Range(0., 1.)) = 0.
-        _SpecularBias("SpecularBias",Range(0., 1.)) = 0.5
-        _Smoothness("Smoothness", Range(0.,1.)) = 0.5
+        _SpecularSize ("Specular Size", Range(0, 1)) = 0.8
+        _SpecularSmoothness ("Specular Smoothness", Range(0.001, 0.25)) = 0.02
         _SpecPatternTex   ("Spec Pattern Tex", 2D) = "white" {}
         _SpecPatternScale ("Spec Pattern Scale", Float) = 1.0
 
@@ -35,7 +36,8 @@ Shader "FuchidoriPopToon/Opaque"
         _ShadowTex("ShadowTex", 2D) = "white" {}
         _ShadowOverlayColor1st("ShadowOverlayColor1st", Color) = (0., 0., 0., 1.)
         _ShadowOverlayColor2nd("ShadowOverlayColor2nd", Color) = (0., 0., 0., 1.)
-        _ShadowWidth("ShadowWidth",Range(0., 1.)) = 0.5
+        _ShadowStep1("Second Shadow Border", Range(0.0, 1.0)) = 0.3
+        _ShadowStep2("Lit Border",Range(0.0, 1.0)) = 0.5
         _ShadowEdgeSmoothness("ShadowEdgeSmoothness",Range(0., 1.)) = 0.05
         _ShadowStrength("ShadowStrength",Range(0., 1.)) = 0.5
         [Toggle(_)] _SDFOn("SDF", Int) = 0
@@ -47,6 +49,8 @@ Shader "FuchidoriPopToon/Opaque"
         [Space(10)]
         _RimColor("RimLightColor", Color) = (1., 1., 1., 1.)
         _RimLightStrength("RimLightStrength", Range(0., 1.)) = .5
+        _RimPower("RimLightPower", Range(0.25, 8.0)) = 2.0
+        _RimSmoothness("RimSmoothness", Range(0.001, 0.49)) = 0.08
         _RimLightMask("RimLightMask", 2D) = "white" {}
         _RimPatternTex      ("Rim Pattern Tex", 2D) = "white" {}
         _RimPatternScale    ("Rim Pattern Scale", Float) = 1.0
@@ -94,8 +98,6 @@ Shader "FuchidoriPopToon/Opaque"
         _MonochromeLighting("Monochrome lighting", Range(0,1)) = 0
         _AlphaBoostFA("Boost Transparency in ForwardAdd", Range(1,100)) = 10
         _LightDirectionOverride("Light Direction Override", Vector) = (0.001,0.002,0.001,0)
-
-        _ShadowThreshold("Shadow Threshold", Range(-1,1)) = 0
         [Toggle(_)] _ReceiveShadow("Receive Shadow", Int) = 0
 
         //------------------------------------------------------------------------------------------------------------------------------
@@ -138,40 +140,35 @@ Shader "FuchidoriPopToon/Opaque"
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
                 UNITY_LIGHT_ATTENUATION(attenuation, i, i.positionWS);
 
-                float3 viewDir = normalize(_WorldSpaceCameraPos.xyz-i.positionWS);
+                float3 viewDir = normalize(UnityWorldSpaceViewDir(i.positionWS));
 
                 // Lighting
                 // [OpenLit] Copy light datas from the input
                 OpenLitLightDatas lightDatas;
-                UnpackLightDatas(lightDatas, i.lightDatas);
+                FPT_UnpackOpenLitData(i, lightDatas);
 
                 half3 normalmap = UnpackScaleNormal(tex2D(_BumpMap, i.uv), _BumpScale);
                 float3 N = normalize(i.tangent * normalmap.x + i.binormal * normalmap.y + i.normalWS * normalmap.z);
                 float3 L = lightDatas.lightDirection;
-                float NdotL = dot(N, L);
 
-                fixed3 factor = CalculateShadow(i, N, L, NdotL);
-                if (_ReceiveShadow) factor *= attenuation;
+                half3 albedo = tex2D(_MainTex, i.uv).rgb * _MainTexOverlayColor.rgb;
 
-                fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
-                fixed3 albedo = col.rgb;
-                col.rgb += fpt_specular(i.positionWS, L, -viewDir, N);
+                albedo = FPT_MatCap(albedo, i.uv, N);
+                albedo = FPT_Rim(i.positionWS, albedo, i.uv, i.normalWS, viewDir);
 
-                CalculateMaterialEffects(col, i, viewDir, N);
+                half3 color = FPT_BaseLighting(i, albedo, N, L, attenuation);
 
-                col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);
-                if(_VRCLightVolumesOn){
-                    fixed3 lvContribution = lv_SampleVolumes(albedo, i, viewDir);
-                    col.rgb = lerp(col.rgb, col.rgb+lvContribution, _VRCLightVolumesStrength);
-                }
+                color += FPT_Specular(i.positionWS, N, L, viewDir)*lightDatas.directLight*attenuation;
 
 #if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH
-                col.rgb += albedo * i.vertexLight;
-                col.rgb = min(col.rgb, albedo.rgb * _LightMaxLimit);
+                color = min(color, albedo* _LightMaxLimit);
 #endif
-                UNITY_APPLY_FOG(i.fogCoord, col);
 
-                return col;
+                color += tex2D(_EmissiveTex, i.uv).rgb * _EmissiveColor.rgb;
+                fixed4 result = fixed4(color, 1.0);
+                UNITY_APPLY_FOG(i.fogCoord, result);
+
+                return result;
             }
             ENDCG
         }
@@ -195,31 +192,36 @@ Shader "FuchidoriPopToon/Opaque"
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
                 UNITY_LIGHT_ATTENUATION(attenuation, i, i.positionWS);
 
-                float3 viewDir = normalize(_WorldSpaceCameraPos.xyz - i.positionWS);
+                float3 viewDir = normalize(UnityWorldSpaceViewDir(i.positionWS));
 
                 // Lighting
                 // [OpenLit] Copy light datas from the input
                 OpenLitLightDatas lightDatas;
-                UnpackLightDatas(lightDatas, i.lightDatas);
+                FPT_UnpackOpenLitData(i, lightDatas);
 
                 half3 normalmap = UnpackScaleNormal(tex2D(_BumpMap, i.uv), _BumpScale);
                 float3 N = normalize(i.tangent * normalmap.x + i.binormal * normalmap.y + i.normalWS * normalmap.z);
-                float3 L = lightDatas.lightDirection;
-                float NdotL = dot(N, L);
+                float3 L = normalize(UnityWorldSpaceLightDir(i.positionWS));
 
-                fixed3 factor = CalculateShadow(i, N, L, NdotL);
+                fixed3 albedo = tex2D(_MainTex, i.uv).rgb * _MainTexOverlayColor.rgb;
 
-                fixed4 col = tex2D(_MainTex, i.uv) * _MainTexOverlayColor;
+                fixed lightLevel = FPT_LitFactor(i, N, L);
+                fixed toonLight = _SDFOn > 0?
+                    lightLevel:
+                    smoothstep(
+                        _ShadowStep2-_ShadowEdgeSmoothness,
+                        _ShadowStep2+_ShadowEdgeSmoothness,
+                        lightLevel
+                    );
+                toonLight = lerp(1.0, toonLight, _ShadowStrength);
 
-                CalculateMaterialEffects(col, i, viewDir, N);
-                col.rgb *= lerp(0., OPENLIT_LIGHT_COLOR, factor*attenuation);
+                fixed3 addLight = OPENLIT_LIGHT_COLOR*attenuation;
+                fixed3 contribution = albedo*addLight*toonLight;
 
-                UNITY_APPLY_FOG(i.fogCoord, col);
+                fixed4 result = fixed4(contribution, 0.0);
+                UNITY_APPLY_FOG(i.fogCoord, result);
 
-                // [OpenLit] Premultiply (only for transparent materials)
-                col.rgb *= saturate(col.a * _AlphaBoostFA);
-
-                return col;
+                return result;
             }
             ENDCG
         }

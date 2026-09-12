@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.0.10
+// FuchidoriPopToon v 1.1.0
 // FPT_Outline.cginc
 #ifndef FPT_OUTLINE_INCLUDED
 #define FPT_OUTLINE_INCLUDED
@@ -63,6 +63,9 @@ fixed4 frag_outline(g2f i) : SV_Target
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
     UNITY_LIGHT_ATTENUATION(attenuation, i, i.positionWS);
 
+    half alpha = FPT_Alpha(i.uv);
+    clip(alpha - _TransparentLevel);
+
     // Lighting
     // [OpenLit] Copy light datas from the input
     OpenLitLightDatas lightDatas;
@@ -75,7 +78,7 @@ fixed4 frag_outline(g2f i) : SV_Target
     col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);
     fixed3 albedo = col.rgb;
 #if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH
-    col.rgb += albedo * i.vertexLight;
+    // Preserve the existing brightness limit independently of vertex lighting.
     col.rgb = min(col.rgb, albedo.rgb * _LightMaxLimit);
 #endif
     UNITY_APPLY_FOG(i.fogCoord, col);
