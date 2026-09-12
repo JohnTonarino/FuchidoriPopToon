@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.0.10
+// FuchidoriPopToon v 1.1.0
 // FPT_Lighting.cginc
 #ifndef FPT_LIGHTING_INCLUDED
 #define FPT_LIGHTING_INCLUDED
@@ -64,7 +64,7 @@ inline half FPT_SDFFaceLitFactor(float2 uv, half3 lightDirection)
 
 inline half FPT_LitFactor(g2f i, half3 normalWS, half3 lightDirection)
 {
-    if (_SDFOn > 0.5h)
+    if (_SDFOn > 0)
     {
         return FPT_SDFFaceLitFactor(i.uv, lightDirection);
     }
@@ -150,7 +150,7 @@ inline half3 FPT_BaseLighting(g2f i, half3 albedo, half3 normalWS, half3 lightDi
 {
     half lightLevel = FPT_LitFactor(i, normalWS, lightDirection);
 
-    half3 shadowTint = _SDFOn > 0.5h ?
+    half3 shadowTint = _SDFOn > 0 ?
         FPT_SDFFaceShadowTint(i.uv, lightLevel):
         FPT_ShadowTint(i.uv, lightLevel);
     shadowTint = lerp(half3(1.0h, 1.0h, 1.0h), shadowTint, _ShadowStrength);
@@ -163,13 +163,13 @@ inline half3 FPT_BaseLighting(g2f i, half3 albedo, half3 normalWS, half3 lightDi
     FPT_UnpackOpenLitData(i, lightDatas);
     half3 ambient = lightDatas.indirectLight;
     half3 direct = lightDatas.directLight;
-    half receiveAttenuation = lerp(1.0h, attenuation, _ReceiveShadow);
+    half receiveAttenuation = lerp(1.0h, attenuation, (half)_ReceiveShadow);
     direct *= receiveAttenuation;
 
     half bandMultiplier = lerp(1.0h, lightLevel, _ShadowStrength);
     half3 openLitLight = lerp(ambient, direct, bandMultiplier);
     half3 lightColor = openLitLight;
-    if (_VRCLightVolumesOn > 0.5h)
+    if (_VRCLightVolumesOn > 0)
     {
         half3 volumeLight = FPT_LightVolumeLighting(i, normalWS);
         half volumeBlend = _VRCLightVolumesStrength * LightVolumesEnabled();
