@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.0.10
+// FuchidoriPopToon v 1.1.0
 Shader "FuchidoriPopToon/Transparent"
 {
     Properties
@@ -212,7 +212,7 @@ Shader "FuchidoriPopToon/Transparent"
                 fixed3 albedo = tex2D(_MainTex, i.uv).rgb * _MainTexOverlayColor.rgb;
 
                 fixed lightLevel = FPT_LitFactor(i, N, L);
-                fixed toonLight = _SDFOn > 0.5h?
+                fixed toonLight = _SDFOn > 0?
                     lightLevel:
                     smoothstep(
                         _ShadowStep2-_ShadowEdgeSmoothness,

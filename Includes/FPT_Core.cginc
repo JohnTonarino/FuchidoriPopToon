@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2024 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.0.10
+// FuchidoriPopToon v 1.1.0
 // FPT_Core.cginc
 #ifndef FPT_CORE_INCLUDED
 #define FPT_CORE_INCLUDED
@@ -22,7 +22,7 @@ half      _BumpScale;
 sampler2D _BumpMap;
 float4    _BumpMap_ST;
 
-uint      _MatCapType;
+int       _MatCapType;
 sampler2D _MatCap;
 half      _MatCapStrength;
 sampler2D _MatCapMask;
@@ -42,7 +42,7 @@ half      _ShadowStep1;
 half      _ShadowStep2;
 half      _ShadowEdgeSmoothness;
 half      _ShadowStrength;
-uint      _SDFOn;
+int       _SDFOn;
 sampler2D _SDFMaskTex;
 float4    _SDFMaskTex_ST;
 sampler2D _ShadowPatternTex;
@@ -66,7 +66,7 @@ fixed     _OuterOutlineWidth;
 fixed     _InnerOutlineWidth;
 half      _OutlineWidth;
 sampler2D _OutlineMask;
-uint      _VertexColorNormal;
+int       _VertexColorNormal;
 half      _AsOutlineUnlit;
 
 sampler2D _TransparentMask;
@@ -75,12 +75,12 @@ half      _TransparentLevel;
 sampler2D _EmissiveTex;
 float4    _EmissiveColor;
 
-uint      _VRCLightVolumesOn;
+int       _VRCLightVolumesOn;
 half      _VRCLightVolumesStrength;
 
 // [OpenLit] Properties for lighting
 float     _LightIntensity;
-uint      _ReceiveShadow;
+int       _ReceiveShadow;
 
 float     _AsUnlit;
 float     _LightMinLimit;
