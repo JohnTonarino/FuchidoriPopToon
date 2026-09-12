@@ -1,4 +1,4 @@
-![FuchidoriPopToonThumb_108](https://github.com/user-attachments/assets/f7c3cf05-52d4-4f1d-8535-b08e674ae8a1)
+![FuchidoriPopToonThumb_110](https://github.com/user-attachments/assets/29783cd7-eb7c-4e22-951d-3b72273f6887)
 
 # 概要
 VRChatでの使用を想定したアウトラインにこだわりのあるシェーダーです。
@@ -36,6 +36,8 @@ https://docs.google.com/document/d/1OkF35q4dHSGHCqt23miYk3yhpgeCFMfmQTHPol4tbb8/
 2025/08/12 1.0.9 頂点カラーに法線情報を書くことでアウトラインの調整を行えるように。VRCLightVolumesのアップデートに対応。
 
 2025/12/09 1.0.10 スクリーントーンテクスチャを使えるように。
+
+2026/09/12 1.1.0 ライティングロジックの修正。
 
 # 免責事項
 当シェーダーを利用することで発生したトラブルや不利益、損害については、製作者は一切責任を負いかねます。
