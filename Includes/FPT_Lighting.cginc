@@ -30,7 +30,7 @@ inline half3 FPT_MatCap(float3 baseColor, float2 uv, half3 normalWS)
     half3 matCap = tex2D(_MatCap, matCapUV).rgb;
     half mask = tex2D(_MatCapMask, uv).r * _MatCapStrength;
 
-    if (_MatCapType == 1)
+    if (_MatCapType != 0u)
     {
         return baseColor * (half3(1.0h, 1.0h, 1.0h) + matCap * mask);
     }
@@ -80,7 +80,7 @@ inline half3 FPT_BaseLighting(g2f i, half3 albedo, half3 normalWS, half3 lightDi
     half bandMultiplier = lerp(1.0h, lightLevel, _ShadowStrength);
     half3 openLitLight = lerp(ambient, direct, bandMultiplier);
     half3 lightColor = openLitLight;
-    if (_VRCLightVolumesOn > 0)
+    if (_VRCLightVolumesOn != 0u)
     {
         half3 volumeLight = JTN_LightVolumeLighting(i.positionWS, normalWS);
         half volumeBlend = _VRCLightVolumesStrength * LightVolumesEnabled();

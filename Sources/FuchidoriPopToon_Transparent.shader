@@ -18,7 +18,7 @@ Shader "FuchidoriPopToon/Transparent"
         [Header(MatCap)]
         [Space(10)]
         _MatCap("MatCap", 2D) = "white" {}
-        [Enum(Lerp,0,Mul,1)]_MatCapType ("MatCapCalcType", int) = 0
+        [Enum(Lerp,0,Multiply,1)]_MatCapType ("MatCap Type", Int) = 0
         _MatCapStrength("MatCapStrength", Range(0., 1.)) = 0.
         _MatCapMask("MatCapMask", 2D) = "white" {}
 

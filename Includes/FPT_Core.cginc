@@ -23,7 +23,7 @@ half      _BumpScale;
 sampler2D _BumpMap;
 float4    _BumpMap_ST;
 
-int       _MatCapType;
+uint      _MatCapType;
 sampler2D _MatCap;
 half      _MatCapStrength;
 sampler2D _MatCapMask;
@@ -66,7 +66,7 @@ half      _TransparentLevel;
 sampler2D _EmissiveTex;
 float4    _EmissiveColor;
 
-int       _VRCLightVolumesOn;
+uint      _VRCLightVolumesOn;
 
 // [OpenLit] Properties for lighting
 float     _LightIntensity;
