@@ -10,6 +10,7 @@
 #include "Lighting.cginc"
 #include "AutoLight.cginc"
 #include "OpenLit/OpenLit.cginc"
+#include "JTN_Properties.cginc"
 
 #define PI 3.141592
 
@@ -35,16 +36,6 @@ sampler2D _SpecPatternTex;
 float4    _SpecPatternTex_ST;
 float     _SpecPatternScale;
 
-sampler2D _ShadowTex;
-fixed4    _ShadowOverlayColor1st;
-fixed4    _ShadowOverlayColor2nd;
-half      _ShadowStep1;
-half      _ShadowStep2;
-half      _ShadowEdgeSmoothness;
-half      _ShadowStrength;
-int       _SDFOn;
-sampler2D _SDFMaskTex;
-float4    _SDFMaskTex_ST;
 sampler2D _ShadowPatternTex;
 float4    _ShadowPatternTex_ST;
 float     _ShadowPatternScale;
@@ -76,17 +67,12 @@ sampler2D _EmissiveTex;
 float4    _EmissiveColor;
 
 int       _VRCLightVolumesOn;
-half      _VRCLightVolumesStrength;
 
 // [OpenLit] Properties for lighting
 float     _LightIntensity;
 int       _ReceiveShadow;
 
-float     _AsUnlit;
-float     _LightMinLimit;
-float     _LightMaxLimit;
 float     _BeforeExposureLimit;
-float     _MonochromeLighting;
 float     _AlphaBoostFA;
 float4    _LightDirectionOverride;
 //---
@@ -126,6 +112,11 @@ struct v2f_shadow {
     float2 uv : TEXCOORD1;
     float4 screenPos : TEXCOORD2;
 };
+
+inline void FPT_UnpackOpenLitData(g2f i, out OpenLitLightDatas lightDatas)
+{
+    UnpackLightDatas(lightDatas, i.lightDatas);
+}
 
 inline half FPT_Alpha(float2 uv)
 {

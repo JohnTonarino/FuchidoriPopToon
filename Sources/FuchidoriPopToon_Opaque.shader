@@ -34,13 +34,13 @@ Shader "FuchidoriPopToon/Opaque"
         [Header(Shadow)]
         [Space(10)]
         _ShadowTex("ShadowTex", 2D) = "white" {}
-        _ShadowOverlayColor1st("ShadowOverlayColor1st", Color) = (0., 0., 0., 1.)
-        _ShadowOverlayColor2nd("ShadowOverlayColor2nd", Color) = (0., 0., 0., 1.)
+        _ShadowColor1("First Shadow Color", Color) = (0., 0., 0., 1.)
+        _ShadowColor2("Second Shadow Color", Color) = (0., 0., 0., 1.)
         _ShadowStep1("Second Shadow Border", Range(0.0, 1.0)) = 0.3
         _ShadowStep2("Lit Border",Range(0.0, 1.0)) = 0.5
-        _ShadowEdgeSmoothness("ShadowEdgeSmoothness",Range(0., 1.)) = 0.05
+        _ShadowSmoothness("Shadow Smoothness",Range(0.001, 0.25)) = 0.03
         _ShadowStrength("ShadowStrength",Range(0., 1.)) = 0.5
-        [Toggle(_)] _SDFOn("SDF", Int) = 0
+        [Toggle(_)] _UseSDF("Use SDF Face Shadow", Int) = 0
         _SDFMaskTex ("SDFMaskTex", 2D) = "white" {}
         _ShadowPatternTex      ("Shadow Pattern Tex", 2D) = "white" {}
         _ShadowPatternScale    ("Shadow Pattern Scale", Float) = 1.0
@@ -205,12 +205,12 @@ Shader "FuchidoriPopToon/Opaque"
 
                 fixed3 albedo = tex2D(_MainTex, i.uv).rgb * _MainTexOverlayColor.rgb;
 
-                fixed lightLevel = FPT_LitFactor(i, N, L);
-                fixed toonLight = _SDFOn > 0?
+                fixed lightLevel = JTN_LitFactor(i.uv, N, L);
+                fixed toonLight = _UseSDF != 0u ?
                     lightLevel:
                     smoothstep(
-                        _ShadowStep2-_ShadowEdgeSmoothness,
-                        _ShadowStep2+_ShadowEdgeSmoothness,
+                        _ShadowStep2-_ShadowSmoothness,
+                        _ShadowStep2+_ShadowSmoothness,
                         lightLevel
                     );
                 toonLight = lerp(1.0, toonLight, _ShadowStrength);
