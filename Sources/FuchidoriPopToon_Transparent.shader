@@ -299,7 +299,6 @@ Shader "FuchidoriPopToon/Transparent"
             {
                 v2f_shadow o;
                 TRANSFER_SHADOW_CASTER_NORMALOFFSET(o)
-                o.pos = UnityObjectToClipPos(v.vertex);
                 o.uv = v.texcoord.xy;
                 return o;
             }
