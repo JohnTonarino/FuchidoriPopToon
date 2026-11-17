@@ -55,7 +55,7 @@ inline half3 FPT_Rim(float3 positionWS, half3 baseColor, float2 uv, half3 normal
     half rimPat = tex2D(_RimPatternTex, rimUV).r;
     rim *= rimPat;
 
-    return 1.0h - (1.0h - baseColor.rgb) * (1.0h - _RimColor * rim);
+    return 1.0h - (1.0h - baseColor.rgb) * (1.0h - _RimColor.rgb * rim);
 }
 
 inline half3 FPT_BaseLighting(g2f i, half3 albedo, half3 normalWS, half3 lightDirection, half attenuation)
