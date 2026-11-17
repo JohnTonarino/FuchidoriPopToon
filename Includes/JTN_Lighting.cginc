@@ -1,6 +1,6 @@
 // Copyright (c) 2026 JohnTonarino
 // Released under the MIT license
-// JTN_Lighting v 1.1.0
+// JTN_Lighting v 1.0.0
 #ifndef JTN_LIGHTING_INCLUDED
 #define JTN_LIGHTING_INCLUDED
 
