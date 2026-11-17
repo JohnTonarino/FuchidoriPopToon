@@ -284,7 +284,7 @@ Shader "FuchidoriPopToon/Cutout"
             }
             ENDCG
         }
-        // For ShadowRendering (not for outline)
+        // For ShadowRendering
         Pass
         {
             Tags {"LightMode" = "ShadowCaster"}
@@ -300,34 +300,6 @@ Shader "FuchidoriPopToon/Cutout"
                 v2f_shadow o;
                 TRANSFER_SHADOW_CASTER_NORMALOFFSET(o)
                 o.pos = UnityObjectToClipPos(v.vertex);
-                o.uv = v.texcoord.xy;
-                return o;
-            }
-            float4 frag(v2f_shadow i) : SV_Target
-            {
-                half alpha = FPT_Alpha(i.uv);
-                clip(alpha - _TransparentLevel);
-                SHADOW_CASTER_FRAGMENT(i)
-            }
-            ENDCG
-        }
-        // For ShadowRendering (for outline)
-        Pass
-        {
-            Tags {"LightMode" = "ShadowCaster"}
-
-            CGPROGRAM
-            #pragma vertex vert
-            #pragma fragment frag
-            #pragma multi_compile_shadowcaster
-            #include "UnityCG.cginc"
-
-            v2f_shadow vert(appdata_base v)
-            {
-                v2f_shadow o;
-                TRANSFER_SHADOW_CASTER_NORMALOFFSET(o)
-                o.pos = UnityObjectToClipPos(v.vertex);
-                o.pos.xy += CalculateOffsetVectorNormal(v.normal, v.texcoord.xy)*_OuterOutlineWidth;
                 o.uv = v.texcoord.xy;
                 return o;
             }
