@@ -301,7 +301,6 @@ Shader "FuchidoriPopToon/Cutout"
                 TRANSFER_SHADOW_CASTER_NORMALOFFSET(o)
                 o.pos = UnityObjectToClipPos(v.vertex);
                 o.uv = v.texcoord.xy;
-                o.screenPos = ComputeScreenPos(o.pos);
                 return o;
             }
             float4 frag(v2f_shadow i) : SV_Target
@@ -330,7 +329,6 @@ Shader "FuchidoriPopToon/Cutout"
                 o.pos = UnityObjectToClipPos(v.vertex);
                 o.pos.xy += CalculateOffsetVectorNormal(v.normal, v.texcoord.xy)*_OuterOutlineWidth;
                 o.uv = v.texcoord.xy;
-                o.screenPos = ComputeScreenPos(o.pos);
                 return o;
             }
             float4 frag(v2f_shadow i) : SV_Target
