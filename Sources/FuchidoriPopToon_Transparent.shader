@@ -212,14 +212,7 @@ Shader "FuchidoriPopToon/Transparent"
                 fixed3 albedo = tex2D(_MainTex, i.uv).rgb * _MainTexOverlayColor.rgb;
 
                 half lightLevel = JTN_LitFactor(i.uv, N, L);
-                half edge = max(_ShadowSmoothness, 0.0001h);
-                half toonLight = _UseSDF != 0u ?
-                    lightLevel:
-                    smoothstep(
-                        _ShadowStep2 - edge,
-                        _ShadowStep2 + edge,
-                        lightLevel
-                    );
+                half toonLight = _UseSDF != 0u ?  lightLevel:JTN_AAStep(_ShadowStep2, _ShadowSmoothness, lightLevel);
                 toonLight = lerp(1.0, toonLight, _ShadowStrength);
 
                 fixed3 addLight = OPENLIT_LIGHT_COLOR*attenuation;

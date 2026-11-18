@@ -16,10 +16,7 @@ inline half3 FPT_Specular(float3 positionWS, half3 normalWS, half3 lightDirectio
     float2 specUV   = JTN_TriplanarUV3D(positionWS, normalWS, _SpecPatternScale);
     float  specPat  = tex2D(_SpecPatternTex, specUV).r;
 
-    half aa   = fwidth(normalHalf);
-    half edge = max(max(_SpecularSmoothness, aa), 0.0001h);
-
-    half specular = smoothstep( _SpecularSize - edge, _SpecularSize + edge, normalHalf);
+    half specular = JTN_AAStep(_SpecularSize, _SpecularSmoothness, normalHalf);
     return _SpecularStrength*_SpecularColor.rgb*specPat*specular;
 }
 
