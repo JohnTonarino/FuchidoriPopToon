@@ -205,14 +205,8 @@ Shader "FuchidoriPopToon/Opaque"
 
                 fixed3 albedo = tex2D(_MainTex, i.uv).rgb * _MainTexOverlayColor.rgb;
 
-                fixed lightLevel = JTN_LitFactor(i.uv, N, L);
-                fixed toonLight = _UseSDF != 0u ?
-                    lightLevel:
-                    smoothstep(
-                        _ShadowStep2-_ShadowSmoothness,
-                        _ShadowStep2+_ShadowSmoothness,
-                        lightLevel
-                    );
+                half lightLevel = JTN_LitFactor(i.uv, N, L);
+                half toonLight = _UseSDF != 0u ?  lightLevel:JTN_AAStep(_ShadowStep2, _ShadowSmoothness, lightLevel);
                 toonLight = lerp(1.0, toonLight, _ShadowStrength);
 
                 fixed3 addLight = OPENLIT_LIGHT_COLOR*attenuation;
@@ -275,7 +269,7 @@ Shader "FuchidoriPopToon/Opaque"
             }
             ENDCG
         }
-        // For ShadowRendering (not for outline)
+        // For ShadowRendering
         Pass
         {
             Tags {"LightMode" = "ShadowCaster"}
@@ -290,36 +284,7 @@ Shader "FuchidoriPopToon/Opaque"
             {
                 v2f_shadow o;
                 TRANSFER_SHADOW_CASTER_NORMALOFFSET(o)
-                o.pos = UnityObjectToClipPos(v.vertex);
                 o.uv = v.texcoord.xy;
-                o.screenPos = ComputeScreenPos(o.pos);
-                return o;
-            }
-            float4 frag(v2f_shadow i) : SV_Target
-            {
-                SHADOW_CASTER_FRAGMENT(i)
-            }
-            ENDCG
-        }
-        // For ShadowRendering (for outline)
-        Pass
-        {
-            Tags {"LightMode" = "ShadowCaster"}
-
-            CGPROGRAM
-            #pragma vertex vert
-            #pragma fragment frag
-            #pragma multi_compile_shadowcaster
-            #include "UnityCG.cginc"
-
-            v2f_shadow vert(appdata_base v)
-            {
-                v2f_shadow o;
-                TRANSFER_SHADOW_CASTER_NORMALOFFSET(o)
-                o.pos = UnityObjectToClipPos(v.vertex);
-                o.pos.xy += CalculateOffsetVectorNormal(v.normal, v.texcoord.xy)*_OuterOutlineWidth;
-                o.uv = v.texcoord.xy;
-                o.screenPos = ComputeScreenPos(o.pos);
                 return o;
             }
             float4 frag(v2f_shadow i) : SV_Target

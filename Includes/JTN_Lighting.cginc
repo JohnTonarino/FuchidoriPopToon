@@ -1,6 +1,6 @@
 // Copyright (c) 2026 JohnTonarino
 // Released under the MIT license
-// JTN_Lighting v 1.1.0
+// JTN_Lighting v 1.0.1
 #ifndef JTN_LIGHTING_INCLUDED
 #define JTN_LIGHTING_INCLUDED
 
@@ -14,6 +14,12 @@
 inline half JTN_Luminance(half3 color)
 {
     return dot(color, half3(0.299h, 0.587h, 0.114h));
+}
+
+inline half JTN_AAStep(half threshold, half smoothness, half value)
+{
+    half edge = max(max(smoothness, fwidth(value)), 0.0001h);
+    return smoothstep(threshold - edge, threshold + edge, value);
 }
 
 inline half3 JTN_LimitLight(half3 lightColor)
@@ -64,9 +70,7 @@ inline half JTN_SDFFaceLitFactor(float2 uv, half3 lightDirection)
     half directionalValue = forwardDotLight * 0.5h + 0.5h;
     half signedDist = directionalValue - sdfThreshold;
 
-    half aa = fwidth(signedDist);
-    half edge = max(max(_ShadowSmoothness, aa), 0.0001h);
-    return 1.0h- smoothstep(-edge, edge, signedDist);
+    return 1.0h - JTN_AAStep(0.0h, _ShadowSmoothness, signedDist);
 }
 
 inline half3 JTN_SDFFaceShadowTint(float2 uv, half litFactor)
@@ -80,10 +84,8 @@ inline half3 JTN_SDFFaceShadowTint(float2 uv, half litFactor)
 
 inline half3 JTN_ShadowTint(float2 uv, half lightLevel)
 {
-    half aa = fwidth(lightLevel);
-    half edge = max(max(_ShadowSmoothness, aa), 0.0001h);
-    half leaveSecondShadow = smoothstep(_ShadowStep1 - edge, _ShadowStep1 + edge, lightLevel);
-    half becomeLit = smoothstep(_ShadowStep2 - edge, _ShadowStep2 + edge, lightLevel);
+    half leaveSecondShadow = JTN_AAStep(_ShadowStep1, _ShadowSmoothness, lightLevel);
+    half becomeLit = JTN_AAStep(_ShadowStep2, _ShadowSmoothness, lightLevel);
 
     half3 shadowTexture = tex2D(_ShadowTex, uv).rgb;
     half3 secondShadow = shadowTexture * _ShadowColor2.rgb;

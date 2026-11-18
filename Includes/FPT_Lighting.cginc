@@ -16,10 +16,7 @@ inline half3 FPT_Specular(float3 positionWS, half3 normalWS, half3 lightDirectio
     float2 specUV   = JTN_TriplanarUV3D(positionWS, normalWS, _SpecPatternScale);
     float  specPat  = tex2D(_SpecPatternTex, specUV).r;
 
-    half aa   = fwidth(normalHalf);
-    half edge = max(max(_SpecularSmoothness, aa), 0.0001h);
-
-    half specular = smoothstep( _SpecularSize - edge, _SpecularSize + edge, normalHalf);
+    half specular = JTN_AAStep(_SpecularSize, _SpecularSmoothness, normalHalf);
     return _SpecularStrength*_SpecularColor.rgb*specPat*specular;
 }
 
@@ -55,7 +52,7 @@ inline half3 FPT_Rim(float3 positionWS, half3 baseColor, float2 uv, half3 normal
     half rimPat = tex2D(_RimPatternTex, rimUV).r;
     rim *= rimPat;
 
-    return 1.0h - (1.0h - baseColor.rgb) * (1.0h - _RimColor * rim);
+    return 1.0h - (1.0h - baseColor.rgb) * (1.0h - _RimColor.rgb * rim);
 }
 
 inline half3 FPT_BaseLighting(g2f i, half3 albedo, half3 normalWS, half3 lightDirection, half attenuation)

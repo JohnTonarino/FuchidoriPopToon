@@ -69,7 +69,6 @@ float4    _EmissiveColor;
 uint      _VRCLightVolumesOn;
 
 // [OpenLit] Properties for lighting
-float     _LightIntensity;
 int       _ReceiveShadow;
 
 float     _BeforeExposureLimit;
@@ -110,7 +109,6 @@ struct g2f
 struct v2f_shadow {
     V2F_SHADOW_CASTER;
     float2 uv : TEXCOORD1;
-    float4 screenPos : TEXCOORD2;
 };
 
 inline void FPT_UnpackOpenLitData(g2f i, out OpenLitLightDatas lightDatas)
