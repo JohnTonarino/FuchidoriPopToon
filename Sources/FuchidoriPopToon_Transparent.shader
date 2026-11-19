@@ -160,7 +160,8 @@ Shader "FuchidoriPopToon/Transparent"
 
                 half3 color = FPT_BaseLighting(i, albedo, N, L, attenuation);
 
-                color += FPT_Specular(i.positionWS, N, L, viewDir)*lightDatas.directLight*attenuation;
+                color += FPT_Specular(i.positionWS, N, L, viewDir)
+                        *lightDatas.directLight*FPT_ReceiveAttenuation(attenuation);
 
 #if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH
                 color = min(color, albedo * _LightMaxLimit);

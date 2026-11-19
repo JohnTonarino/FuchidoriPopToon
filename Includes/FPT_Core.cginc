@@ -120,6 +120,12 @@ inline half FPT_Alpha(float2 uv)
 {
     return tex2D(_MainTex, uv).a * dot(tex2D(_TransparentMask, uv).rgb, half3(0.299h, 0.587h, 0.114h));
 }
+
+inline half FPT_ReceiveAttenuation(half attenuation)
+{
+    return lerp(1.0h, attenuation, saturate(_ReceiveShadow));
+}
+
 g2f vert_base (appdata v)
 {
     g2f o;
