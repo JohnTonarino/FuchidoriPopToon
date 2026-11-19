@@ -162,12 +162,8 @@ Shader "FuchidoriPopToon/Transparent"
 
                 color += FPT_Specular(i.positionWS, N, L, viewDir)
                         *lightDatas.directLight*FPT_ReceiveAttenuation(attenuation);
-
-#if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH
-                color = min(color, albedo * _LightMaxLimit);
-#endif
-
                 color += tex2D(_EmissiveTex, i.uv).rgb * _EmissiveColor.rgb;
+
                 fixed4 result = fixed4(color, alpha);
                 UNITY_APPLY_FOG(i.fogCoord, result);
 
