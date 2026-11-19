@@ -161,4 +161,15 @@ g2f vert_main_pass(appdata v)
 
     return o;
 }
+
+inline half3 FPT_NormalWS(g2f i)
+{
+    half3 normalTS = UnpackScaleNormal(tex2D(_BumpMap, i.uv), _BumpScale);
+    return normalize(
+        normalize(i.tangent)  * normalTS.x +
+        normalize(i.binormal) * normalTS.y +
+        normalize(i.normalWS) * normalTS.z
+    );
+}
+
 #endif // FPT_CORE_INCLUDED

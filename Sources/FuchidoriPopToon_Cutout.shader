@@ -150,14 +150,13 @@ Shader "FuchidoriPopToon/Cutout"
                 OpenLitLightDatas lightDatas;
                 FPT_UnpackOpenLitData(i, lightDatas);
 
-                half3 normalmap = UnpackScaleNormal(tex2D(_BumpMap, i.uv), _BumpScale);
-                float3 N = normalize(i.tangent * normalmap.x + i.binormal * normalmap.y + i.normalWS * normalmap.z);
+                float3 N = FPT_NormalWS(i);
                 float3 L = lightDatas.lightDirection;
 
                 half3 albedo = tex2D(_MainTex, i.uv).rgb * _MainTexOverlayColor.rgb;
 
                 albedo = FPT_MatCap(albedo, i.uv, N);
-                albedo = FPT_Rim(i.positionWS, albedo, i.uv, i.normalWS, viewDir);
+                albedo = FPT_Rim(i.positionWS, albedo, i.uv, N, viewDir);
 
                 half3 color = FPT_BaseLighting(i, albedo, N, L, attenuation);
 
@@ -205,8 +204,7 @@ Shader "FuchidoriPopToon/Cutout"
                 OpenLitLightDatas lightDatas;
                 FPT_UnpackOpenLitData(i, lightDatas);
 
-                half3 normalmap = UnpackScaleNormal(tex2D(_BumpMap, i.uv), _BumpScale);
-                float3 N = normalize(i.tangent * normalmap.x + i.binormal * normalmap.y + i.normalWS * normalmap.z);
+                float3 N = FPT_NormalWS(i);
                 float3 L = normalize(UnityWorldSpaceLightDir(i.positionWS));
 
                 fixed3 albedo = tex2D(_MainTex, i.uv).rgb * _MainTexOverlayColor.rgb;
