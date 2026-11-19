@@ -147,24 +147,20 @@ Shader "FuchidoriPopToon/Opaque"
                 OpenLitLightDatas lightDatas;
                 FPT_UnpackOpenLitData(i, lightDatas);
 
-                half3 normalmap = UnpackScaleNormal(tex2D(_BumpMap, i.uv), _BumpScale);
-                float3 N = normalize(i.tangent * normalmap.x + i.binormal * normalmap.y + i.normalWS * normalmap.z);
+                float3 N = FPT_NormalWS(i);
                 float3 L = lightDatas.lightDirection;
 
                 half3 albedo = tex2D(_MainTex, i.uv).rgb * _MainTexOverlayColor.rgb;
 
                 albedo = FPT_MatCap(albedo, i.uv, N);
-                albedo = FPT_Rim(i.positionWS, albedo, i.uv, i.normalWS, viewDir);
+                albedo = FPT_Rim(i.positionWS, albedo, i.uv, N, viewDir);
 
                 half3 color = FPT_BaseLighting(i, albedo, N, L, attenuation);
 
-                color += FPT_Specular(i.positionWS, N, L, viewDir)*lightDatas.directLight*attenuation;
-
-#if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH
-                color = min(color, albedo* _LightMaxLimit);
-#endif
-
+                color += FPT_Specular(i.positionWS, N, L, viewDir)
+                        *lightDatas.directLight*FPT_ReceiveAttenuation(attenuation);
                 color += tex2D(_EmissiveTex, i.uv).rgb * _EmissiveColor.rgb;
+
                 fixed4 result = fixed4(color, 1.0);
                 UNITY_APPLY_FOG(i.fogCoord, result);
 
@@ -199,8 +195,7 @@ Shader "FuchidoriPopToon/Opaque"
                 OpenLitLightDatas lightDatas;
                 FPT_UnpackOpenLitData(i, lightDatas);
 
-                half3 normalmap = UnpackScaleNormal(tex2D(_BumpMap, i.uv), _BumpScale);
-                float3 N = normalize(i.tangent * normalmap.x + i.binormal * normalmap.y + i.normalWS * normalmap.z);
+                float3 N = FPT_NormalWS(i);
                 float3 L = normalize(UnityWorldSpaceLightDir(i.positionWS));
 
                 fixed3 albedo = tex2D(_MainTex, i.uv).rgb * _MainTexOverlayColor.rgb;

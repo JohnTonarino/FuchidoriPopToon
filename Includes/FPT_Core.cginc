@@ -120,6 +120,12 @@ inline half FPT_Alpha(float2 uv)
 {
     return tex2D(_MainTex, uv).a * dot(tex2D(_TransparentMask, uv).rgb, half3(0.299h, 0.587h, 0.114h));
 }
+
+inline half FPT_ReceiveAttenuation(half attenuation)
+{
+    return lerp(1.0h, attenuation, saturate(_ReceiveShadow));
+}
+
 g2f vert_base (appdata v)
 {
     g2f o;
@@ -161,4 +167,15 @@ g2f vert_main_pass(appdata v)
 
     return o;
 }
+
+inline half3 FPT_NormalWS(g2f i)
+{
+    half3 normalTS = UnpackScaleNormal(tex2D(_BumpMap, i.uv), _BumpScale);
+    return normalize(
+        normalize(i.tangent)  * normalTS.x +
+        normalize(i.binormal) * normalTS.y +
+        normalize(i.normalWS) * normalTS.z
+    );
+}
+
 #endif // FPT_CORE_INCLUDED
