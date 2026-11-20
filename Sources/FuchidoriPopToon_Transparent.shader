@@ -112,7 +112,7 @@ Shader "FuchidoriPopToon/Transparent"
         #include "../Includes/FPT_Outline.cginc"
         #include "../Includes/FPT_Lighting.cginc"
 
-        #pragma target 3.5
+        #pragma target 4.0
         #pragma skip_variants LIGHTMAP_ON DYNAMICLIGHTMAP_ON LIGHTMAP_SHADOW_MIXING SHADOWS_SHADOWMASK DIRLIGHTMAP_COMBINED
         ENDCG
 
