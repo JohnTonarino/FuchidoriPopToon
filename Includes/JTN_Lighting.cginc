@@ -98,13 +98,13 @@ inline half3 JTN_ShadowTint(float2 uv, half lightLevel)
 
 inline half JTN_LitFactor(float2 uv, half3 normalWS, half3 lightDirection)
 {
+    half litFactor = dot(normalWS, lightDirection) * 0.5h + 0.5h;
     if (_UseSDF != 0u)
     {
-        return JTN_SDFFaceLitFactor(uv, lightDirection);
+        litFactor = JTN_SDFFaceLitFactor(uv, lightDirection);
     }
 
-    half normalLight = dot(normalWS, lightDirection) * 0.5h + 0.5h;
-    return normalLight;
+    return litFactor;
 }
 
 #endif
