@@ -112,6 +112,7 @@ Shader "FuchidoriPopToon/Transparent"
         #include "../Includes/FPT_Outline.cginc"
         #include "../Includes/FPT_Lighting.cginc"
 
+        #pragma target 4.0
         #pragma skip_variants LIGHTMAP_ON DYNAMICLIGHTMAP_ON LIGHTMAP_SHADOW_MIXING SHADOWS_SHADOWMASK DIRLIGHTMAP_COMBINED
         ENDCG
 
@@ -162,7 +163,7 @@ Shader "FuchidoriPopToon/Transparent"
 
                 color += FPT_Specular(i.positionWS, N, L, viewDir)
                         *lightDatas.directLight*FPT_ReceiveAttenuation(attenuation);
-                color += tex2D(_EmissiveTex, i.uv).rgb * _EmissiveColor.rgb;
+                color += FPT_SAMPLE(_EmissiveTex, i.uv).rgb * _EmissiveColor.rgb;
 
                 fixed4 result = fixed4(color, alpha);
                 UNITY_APPLY_FOG(i.fogCoord, result);

@@ -14,7 +14,7 @@ inline half3 FPT_Specular(float3 positionWS, half3 normalWS, half3 lightDirectio
     half normalHalf = saturate(dot(normalWS, halfDirection));
 
     float2 specUV   = JTN_TriplanarUV3D(positionWS, normalWS, _SpecPatternScale);
-    float  specPat  = tex2D(_SpecPatternTex, specUV).r;
+    float  specPat  = FPT_SAMPLE(_SpecPatternTex, specUV).r;
 
     half specular = JTN_AAStep(_SpecularSize, _SpecularSmoothness, normalHalf);
     return _SpecularStrength*_SpecularColor.rgb*specPat*specular;
@@ -25,7 +25,7 @@ inline half3 FPT_MatCap(float3 baseColor, float2 uv, half3 normalWS)
     half3 normalVS = mul((half3x3)UNITY_MATRIX_V, normalWS);
     float2 matCapUV = normalVS.xy * 0.5 + 0.5;
     half3 matCap = tex2D(_MatCap, matCapUV).rgb;
-    half mask = tex2D(_MatCapMask, uv).r * _MatCapStrength;
+    half mask = FPT_SAMPLE(_MatCapMask, uv).r * _MatCapStrength;
 
     if (_MatCapType != 0u)
     {
@@ -46,10 +46,10 @@ inline half3 FPT_Rim(float3 positionWS, half3 baseColor, float2 uv, half3 normal
     half rimShape = pow(max(rimBase, 0.0001h), max(_RimPower, 0.0001h));
 
     half rim = smoothstep(0.5h - _RimSmoothness, 0.5h + _RimSmoothness, rimShape);
-    rim *= tex2D(_RimLightMask, uv).r * _RimLightStrength;
+    rim *= FPT_SAMPLE(_RimLightMask, uv).r * _RimLightStrength;
 
     float2 rimUV  = JTN_TriplanarUV3D(positionWS, normalWS, _RimPatternScale);
-    half rimPat = tex2D(_RimPatternTex, rimUV).r;
+    half rimPat = FPT_SAMPLE(_RimPatternTex, rimUV).r;
     rim *= rimPat;
 
     return 1.0h - (1.0h - baseColor.rgb) * (1.0h - _RimColor.rgb * rim);
@@ -64,7 +64,7 @@ inline half3 FPT_BaseLighting(g2f i, half3 albedo, half3 normalWS, half3 lightDi
         JTN_ShadowTint(i.uv, lightLevel);
 
     float2 toneUV  = JTN_TriplanarUV3D(i.positionWS, normalWS, _ShadowPatternScale);
-    half tone = tex2D(_ShadowPatternTex, toneUV).r;
+    half tone = FPT_SAMPLE(_ShadowPatternTex, toneUV).r;
     shadowTint = 1.0h - tone * (1.0-shadowTint);
 
     OpenLitLightDatas lightDatas;

@@ -42,14 +42,12 @@ inline float2 JTN_TriplanarUV3D(float3 positionWS, float3 normalWS, float scale)
 
 inline half3 JTN_LightVolumeLighting(float3 positionWS, half3 normalWS)
 {
-    float3 lightL0;
-    float3 lightL1R;
-    float3 lightL1G;
-    float3 lightL1B;
+    float3 n = normalize(normalWS);
+    float3 L0, L1r, L1g, L1b;
 
-    LightVolumeSH(positionWS, lightL0, lightL1R, lightL1G, lightL1B);
-    half3 volumeLight = LightVolumeEvaluate(normalize(normalWS), lightL0, lightL1R, lightL1G, lightL1B);
-
+    // 引数は 位置, SH出力×4, サンプル位置オフセット, 法線, ポイントライトの陰影の強さ
+    LightVolumeSH(positionWS, L0, L1r, L1g, L1b, float3(0.0, 0.0, 0.0), n, 3.0);
+    half3 volumeLight = LightVolumeEvaluate(n, L0, L1r, L1g, L1b);
     return JTN_LimitLight(volumeLight);
 }
 

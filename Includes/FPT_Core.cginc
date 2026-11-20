@@ -13,6 +13,9 @@
 #include "JTN_Properties.cginc"
 
 #define PI 3.141592
+SamplerState fpt_trilinear_repeat_sampler;
+#define FPT_SAMPLE(tex, uv)     tex.Sample(fpt_trilinear_repeat_sampler, uv)
+#define FPT_SAMPLE_LOD0(tex, uv) tex.SampleLevel(fpt_trilinear_repeat_sampler, uv, 0)
 
 sampler2D _MainTex;
 float4    _MainTex_ST;
@@ -26,17 +29,17 @@ float4    _BumpMap_ST;
 uint      _MatCapType;
 sampler2D _MatCap;
 half      _MatCapStrength;
-sampler2D _MatCapMask;
+Texture2D _MatCapMask;
 
 fixed4    _SpecularColor;
 half      _SpecularStrength;
 half      _SpecularSize;
 half      _SpecularSmoothness;
-sampler2D _SpecPatternTex;
+Texture2D _SpecPatternTex;
 float4    _SpecPatternTex_ST;
 float     _SpecPatternScale;
 
-sampler2D _ShadowPatternTex;
+Texture2D _ShadowPatternTex;
 float4    _ShadowPatternTex_ST;
 float     _ShadowPatternScale;
 
@@ -44,8 +47,8 @@ fixed4    _RimColor;
 half      _RimLightStrength;
 half      _RimPower;
 half      _RimSmoothness;
-sampler2D _RimLightMask;
-sampler2D _RimPatternTex;
+Texture2D _RimLightMask;
+Texture2D _RimPatternTex;
 float4    _RimPatternTex_ST;
 float     _RimPatternScale;
 
@@ -56,14 +59,14 @@ fixed     _OuterOutlineRatio;
 fixed     _OuterOutlineWidth;
 fixed     _InnerOutlineWidth;
 half      _OutlineWidth;
-sampler2D _OutlineMask;
+Texture2D _OutlineMask;
 int       _VertexColorNormal;
 half      _AsOutlineUnlit;
 
-sampler2D _TransparentMask;
+Texture2D _TransparentMask;
 half      _TransparentLevel;
 
-sampler2D _EmissiveTex;
+Texture2D _EmissiveTex;
 float4    _EmissiveColor;
 
 uint      _VRCLightVolumesOn;
@@ -118,7 +121,7 @@ inline void FPT_UnpackOpenLitData(g2f i, out OpenLitLightDatas lightDatas)
 
 inline half FPT_Alpha(float2 uv)
 {
-    return tex2D(_MainTex, uv).a * dot(tex2D(_TransparentMask, uv).rgb, half3(0.299h, 0.587h, 0.114h));
+    return tex2D(_MainTex, uv).a * dot(FPT_SAMPLE(_TransparentMask, uv).rgb, half3(0.299h, 0.587h, 0.114h));
 }
 
 inline half FPT_ReceiveAttenuation(half attenuation)
