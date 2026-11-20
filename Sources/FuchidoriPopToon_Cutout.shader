@@ -163,7 +163,7 @@ Shader "FuchidoriPopToon/Cutout"
 
                 color += FPT_Specular(i.positionWS, N, L, viewDir)
                         *lightDatas.directLight*FPT_ReceiveAttenuation(attenuation);
-                color += tex2D(_EmissiveTex, i.uv).rgb * _EmissiveColor.rgb;
+                color += FPT_SAMPLE(_EmissiveTex, i.uv).rgb * _EmissiveColor.rgb;
 
                 fixed4 result = fixed4(color, alpha);
                 UNITY_APPLY_FOG(i.fogCoord, result);

@@ -45,7 +45,8 @@ inline half3 JTN_LightVolumeLighting(float3 positionWS, half3 normalWS)
     float3 n = normalize(normalWS);
     float3 L0, L1r, L1g, L1b;
 
-    LightVolumeSH(positionWS, L0, L1r, L1g, L1b, 0, n);
+    // 引数は 位置, SH出力×4, サンプル位置オフセット, 法線, ポイントライトの陰影の強さ
+    LightVolumeSH(positionWS, L0, L1r, L1g, L1b, float3(0.0, 0.0, 0.0), n, 3.0);
     half3 volumeLight = LightVolumeEvaluate(n, L0, L1r, L1g, L1b);
     return JTN_LimitLight(volumeLight);
 }

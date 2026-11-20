@@ -28,7 +28,7 @@ float2 CalculateOffsetVectorVertex(fixed4 color, float3 normalOS, float4 tangent
     float normLength = length(norm);
     norm = normLength > 0.0001 ? norm / normLength : float3(0, 0, 1);
 
-    fixed4 outlineMask = tex2Dlod(_OutlineMask, float4(uv.xy, 0., 0.));
+    fixed4 outlineMask = FPT_SAMPLE_LOD0(_OutlineMask, uv);
     float2 offsetVector = TransformViewToProjection(norm.xy)*outlineMask.r;
     return offsetVector;
 }
@@ -40,7 +40,7 @@ float2 CalculateOffsetVectorNormal(float3 normalOS, float2 uv){
     float normLength = length(norm);
     norm = normLength > 0.0001 ? norm / normLength : float3(0, 0, 1);
 
-    fixed4 outlineMask = tex2Dlod(_OutlineMask, float4(uv.xy, 0., 0.));
+    fixed4 outlineMask = FPT_SAMPLE_LOD0(_OutlineMask, uv);
     float2 offsetVector = TransformViewToProjection(norm.xy)*outlineMask.r;
     return offsetVector;
 }
