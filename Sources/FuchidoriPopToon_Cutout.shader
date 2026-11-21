@@ -1,6 +1,6 @@
-﻿// Copyright (c) 2024 JohnTonarino
+﻿// Copyright (c) 2026 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.1.0
+// FuchidoriPopToon v 1.2.0
 Shader "FuchidoriPopToon/Cutout"
 {
     Properties
