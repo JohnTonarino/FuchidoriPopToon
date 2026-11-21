@@ -1,6 +1,6 @@
-﻿// Copyright (c) 2024 JohnTonarino
+﻿// Copyright (c) 2026 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.1.0
+// FuchidoriPopToon v 1.2.0
 // FPT_Outline.cginc
 #ifndef FPT_OUTLINE_INCLUDED
 #define FPT_OUTLINE_INCLUDED
@@ -28,7 +28,7 @@ float2 CalculateOffsetVectorVertex(fixed4 color, float3 normalOS, float4 tangent
     float normLength = length(norm);
     norm = normLength > 0.0001 ? norm / normLength : float3(0, 0, 1);
 
-    fixed4 outlineMask = tex2Dlod(_OutlineMask, float4(uv.xy, 0., 0.));
+    fixed4 outlineMask = FPT_SAMPLE_LOD0(_OutlineMask, uv);
     float2 offsetVector = TransformViewToProjection(norm.xy)*outlineMask.r;
     return offsetVector;
 }
@@ -40,21 +40,25 @@ float2 CalculateOffsetVectorNormal(float3 normalOS, float2 uv){
     float normLength = length(norm);
     norm = normLength > 0.0001 ? norm / normLength : float3(0, 0, 1);
 
-    fixed4 outlineMask = tex2Dlod(_OutlineMask, float4(uv.xy, 0., 0.));
+    fixed4 outlineMask = FPT_SAMPLE_LOD0(_OutlineMask, uv);
     float2 offsetVector = TransformViewToProjection(norm.xy)*outlineMask.r;
     return offsetVector;
+}
+
+inline uint3 FPT_OutlineLightPack()
+{
+    OpenLitLightDatas lightDatas;
+    ComputeLights(lightDatas, _LightDirectionOverride);
+    CorrectLights(lightDatas, _LightMinLimit, _LightMaxLimit, _MonochromeLighting, _AsOutlineUnlit);
+    uint3 packed;
+    PackLightDatas(packed, lightDatas);
+    return packed;
 }
 
 g2f vert_outlinebase(appdata v) {
     g2f o;
     o = vert_base(v);
-
-    // [OpenLit] Calculate and copy light datas
-    OpenLitLightDatas lightDatas;
-    ComputeLights(lightDatas, _LightDirectionOverride);
-    CorrectLights(lightDatas, _LightMinLimit, _LightMaxLimit, _MonochromeLighting, _AsOutlineUnlit);
-    PackLightDatas(o.lightDatas, lightDatas);
-
+    o.lightDatas = FPT_OutlineLightPack();
     return o;
 }
 
@@ -76,11 +80,6 @@ fixed4 frag_outline(g2f i) : SV_Target
 
     fixed4 col = i.color;
     col.rgb *= lerp(lightDatas.indirectLight, lightDatas.directLight, factor);
-    fixed3 albedo = col.rgb;
-#if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH
-    // Preserve the existing brightness limit independently of vertex lighting.
-    col.rgb = min(col.rgb, albedo.rgb * _LightMaxLimit);
-#endif
     UNITY_APPLY_FOG(i.fogCoord, col);
 
     return col;
@@ -103,10 +102,13 @@ void geom_outline(triangle appdata IN[3], inout TriangleStream<g2f> stream) {
             CalculateOffsetVectorNormal(v.normalOS, v.uv);
     }
 
+    uint3 lightPack = FPT_OutlineLightPack();
+
     // 1st Outline
     [unroll]for (int j = 0; j < 3; ++j) {
         appdata v = IN[j];
-        o = vert_outlinebase(v);
+        o = vert_base(v);
+        o.lightDatas = lightPack;
         o.pos.xy += (offsets[j] * _OuterOutlineRatio * _OuterOutlineWidth);
         o.color = _OuterOutlineColor1st;
         UNITY_TRANSFER_FOG(o, o.pos);
@@ -118,7 +120,8 @@ void geom_outline(triangle appdata IN[3], inout TriangleStream<g2f> stream) {
     // 2nd Outline
     [unroll]for (int k = 0; k < 3; ++k) {
         appdata v = IN[k];
-        o = vert_outlinebase(v);
+        o = vert_base(v);
+        o.lightDatas = lightPack;
         o.pos.xy += (offsets[k] * _OuterOutlineWidth);
         o.color = _OuterOutlineColor2nd;
         UNITY_TRANSFER_FOG(o, o.pos);

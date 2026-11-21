@@ -1,6 +1,6 @@
-﻿// Copyright (c) 2024 JohnTonarino
+﻿// Copyright (c) 2026 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.1.0
+// FuchidoriPopToon v 1.2.0
 Shader "FuchidoriPopToon/Cutout"
 {
     Properties
@@ -18,7 +18,7 @@ Shader "FuchidoriPopToon/Cutout"
         [Header(MatCap)]
         [Space(10)]
         _MatCap("MatCap", 2D) = "white" {}
-        [Enum(Lerp,0,Mul,1)]_MatCapType ("MatCapCalcType", int) = 0
+        [Enum(Lerp,0,Multiply,1)]_MatCapType ("MatCap Type", Int) = 0
         _MatCapStrength("MatCapStrength", Range(0., 1.)) = 0.
         _MatCapMask("MatCapMask", 2D) = "white" {}
 
@@ -34,13 +34,13 @@ Shader "FuchidoriPopToon/Cutout"
         [Header(Shadow)]
         [Space(10)]
         _ShadowTex("ShadowTex", 2D) = "white" {}
-        _ShadowOverlayColor1st("ShadowOverlayColor1st", Color) = (0., 0., 0., 1.)
-        _ShadowOverlayColor2nd("ShadowOverlayColor2nd", Color) = (0., 0., 0., 1.)
+        _ShadowColor1("First Shadow Color", Color) = (0., 0., 0., 1.)
+        _ShadowColor2("Second Shadow Color", Color) = (0., 0., 0., 1.)
         _ShadowStep1("Second Shadow Border", Range(0.0, 1.0)) = 0.3
         _ShadowStep2("Lit Border",Range(0.0, 1.0)) = 0.5
-        _ShadowEdgeSmoothness("ShadowEdgeSmoothness",Range(0., 1.)) = 0.05
+        _ShadowSmoothness("Shadow Smoothness",Range(0.001, 0.25)) = 0.03
         _ShadowStrength("ShadowStrength",Range(0., 1.)) = 0.5
-        [Toggle(_)] _SDFOn("SDF", Int) = 0
+        [Toggle(_)] _UseSDF("Use SDF Face Shadow", Int) = 0
         _SDFMaskTex ("SDFMaskTex", 2D) = "white" {}
         _ShadowPatternTex      ("Shadow Pattern Tex", 2D) = "white" {}
         _ShadowPatternScale    ("Shadow Pattern Scale", Float) = 1.0
@@ -112,6 +112,7 @@ Shader "FuchidoriPopToon/Cutout"
         #include "../Includes/FPT_Outline.cginc"
         #include "../Includes/FPT_Lighting.cginc"
 
+        #pragma target 4.0
         #pragma skip_variants LIGHTMAP_ON DYNAMICLIGHTMAP_ON LIGHTMAP_SHADOW_MIXING SHADOWS_SHADOWMASK DIRLIGHTMAP_COMBINED
         ENDCG
 
@@ -150,24 +151,20 @@ Shader "FuchidoriPopToon/Cutout"
                 OpenLitLightDatas lightDatas;
                 FPT_UnpackOpenLitData(i, lightDatas);
 
-                half3 normalmap = UnpackScaleNormal(tex2D(_BumpMap, i.uv), _BumpScale);
-                float3 N = normalize(i.tangent * normalmap.x + i.binormal * normalmap.y + i.normalWS * normalmap.z);
+                float3 N = FPT_NormalWS(i);
                 float3 L = lightDatas.lightDirection;
 
                 half3 albedo = tex2D(_MainTex, i.uv).rgb * _MainTexOverlayColor.rgb;
 
                 albedo = FPT_MatCap(albedo, i.uv, N);
-                albedo = FPT_Rim(i.positionWS, albedo, i.uv, i.normalWS, viewDir);
+                albedo = FPT_Rim(i.positionWS, albedo, i.uv, N, viewDir);
 
                 half3 color = FPT_BaseLighting(i, albedo, N, L, attenuation);
 
-                color += FPT_Specular(i.positionWS, N, L, viewDir)*lightDatas.directLight*attenuation;
+                color += FPT_Specular(i.positionWS, N, L, viewDir)
+                        *lightDatas.directLight*FPT_ReceiveAttenuation(attenuation);
+                color += FPT_SAMPLE(_EmissiveTex, i.uv).rgb * _EmissiveColor.rgb;
 
-#if !defined(LIGHTMAP_ON) && UNITY_SHOULD_SAMPLE_SH
-                color = min(color, albedo * _LightMaxLimit);
-#endif
-
-                color += tex2D(_EmissiveTex, i.uv).rgb * _EmissiveColor.rgb;
                 fixed4 result = fixed4(color, alpha);
                 UNITY_APPLY_FOG(i.fogCoord, result);
 
@@ -205,20 +202,13 @@ Shader "FuchidoriPopToon/Cutout"
                 OpenLitLightDatas lightDatas;
                 FPT_UnpackOpenLitData(i, lightDatas);
 
-                half3 normalmap = UnpackScaleNormal(tex2D(_BumpMap, i.uv), _BumpScale);
-                float3 N = normalize(i.tangent * normalmap.x + i.binormal * normalmap.y + i.normalWS * normalmap.z);
+                float3 N = FPT_NormalWS(i);
                 float3 L = normalize(UnityWorldSpaceLightDir(i.positionWS));
 
                 fixed3 albedo = tex2D(_MainTex, i.uv).rgb * _MainTexOverlayColor.rgb;
 
-                fixed lightLevel = FPT_LitFactor(i, N, L);
-                fixed toonLight = _SDFOn > 0?
-                    lightLevel:
-                    smoothstep(
-                        _ShadowStep2-_ShadowEdgeSmoothness,
-                        _ShadowStep2+_ShadowEdgeSmoothness,
-                        lightLevel
-                    );
+                half lightLevel = JTN_LitFactor(i.uv, N, L);
+                half toonLight = _UseSDF != 0u ?  lightLevel:JTN_AAStep(_ShadowStep2, _ShadowSmoothness, lightLevel);
                 toonLight = lerp(1.0, toonLight, _ShadowStrength);
 
                 fixed3 addLight = OPENLIT_LIGHT_COLOR*attenuation;
@@ -284,7 +274,7 @@ Shader "FuchidoriPopToon/Cutout"
             }
             ENDCG
         }
-        // For ShadowRendering (not for outline)
+        // For ShadowRendering
         Pass
         {
             Tags {"LightMode" = "ShadowCaster"}
@@ -299,38 +289,7 @@ Shader "FuchidoriPopToon/Cutout"
             {
                 v2f_shadow o;
                 TRANSFER_SHADOW_CASTER_NORMALOFFSET(o)
-                o.pos = UnityObjectToClipPos(v.vertex);
                 o.uv = v.texcoord.xy;
-                o.screenPos = ComputeScreenPos(o.pos);
-                return o;
-            }
-            float4 frag(v2f_shadow i) : SV_Target
-            {
-                half alpha = FPT_Alpha(i.uv);
-                clip(alpha - _TransparentLevel);
-                SHADOW_CASTER_FRAGMENT(i)
-            }
-            ENDCG
-        }
-        // For ShadowRendering (for outline)
-        Pass
-        {
-            Tags {"LightMode" = "ShadowCaster"}
-
-            CGPROGRAM
-            #pragma vertex vert
-            #pragma fragment frag
-            #pragma multi_compile_shadowcaster
-            #include "UnityCG.cginc"
-
-            v2f_shadow vert(appdata_base v)
-            {
-                v2f_shadow o;
-                TRANSFER_SHADOW_CASTER_NORMALOFFSET(o)
-                o.pos = UnityObjectToClipPos(v.vertex);
-                o.pos.xy += CalculateOffsetVectorNormal(v.normal, v.texcoord.xy)*_OuterOutlineWidth;
-                o.uv = v.texcoord.xy;
-                o.screenPos = ComputeScreenPos(o.pos);
                 return o;
             }
             float4 frag(v2f_shadow i) : SV_Target

@@ -1,6 +1,6 @@
-﻿// Copyright (c) 2024 JohnTonarino
+﻿// Copyright (c) 2026 JohnTonarino
 // Released under the MIT license
-// FuchidoriPopToon v 1.1.0
+// FuchidoriPopToon v 1.2.0
 // FPT_Core.cginc
 #ifndef FPT_CORE_INCLUDED
 #define FPT_CORE_INCLUDED
@@ -10,8 +10,12 @@
 #include "Lighting.cginc"
 #include "AutoLight.cginc"
 #include "OpenLit/OpenLit.cginc"
+#include "JTN_Properties.cginc"
 
 #define PI 3.141592
+SamplerState fpt_trilinear_repeat_sampler;
+#define FPT_SAMPLE(tex, uv)     tex.Sample(fpt_trilinear_repeat_sampler, uv)
+#define FPT_SAMPLE_LOD0(tex, uv) tex.SampleLevel(fpt_trilinear_repeat_sampler, uv, 0)
 
 sampler2D _MainTex;
 float4    _MainTex_ST;
@@ -22,30 +26,20 @@ half      _BumpScale;
 sampler2D _BumpMap;
 float4    _BumpMap_ST;
 
-int       _MatCapType;
+uint      _MatCapType;
 sampler2D _MatCap;
 half      _MatCapStrength;
-sampler2D _MatCapMask;
+Texture2D _MatCapMask;
 
 fixed4    _SpecularColor;
 half      _SpecularStrength;
 half      _SpecularSize;
 half      _SpecularSmoothness;
-sampler2D _SpecPatternTex;
+Texture2D _SpecPatternTex;
 float4    _SpecPatternTex_ST;
 float     _SpecPatternScale;
 
-sampler2D _ShadowTex;
-fixed4    _ShadowOverlayColor1st;
-fixed4    _ShadowOverlayColor2nd;
-half      _ShadowStep1;
-half      _ShadowStep2;
-half      _ShadowEdgeSmoothness;
-half      _ShadowStrength;
-int       _SDFOn;
-sampler2D _SDFMaskTex;
-float4    _SDFMaskTex_ST;
-sampler2D _ShadowPatternTex;
+Texture2D _ShadowPatternTex;
 float4    _ShadowPatternTex_ST;
 float     _ShadowPatternScale;
 
@@ -53,8 +47,8 @@ fixed4    _RimColor;
 half      _RimLightStrength;
 half      _RimPower;
 half      _RimSmoothness;
-sampler2D _RimLightMask;
-sampler2D _RimPatternTex;
+Texture2D _RimLightMask;
+Texture2D _RimPatternTex;
 float4    _RimPatternTex_ST;
 float     _RimPatternScale;
 
@@ -65,28 +59,22 @@ fixed     _OuterOutlineRatio;
 fixed     _OuterOutlineWidth;
 fixed     _InnerOutlineWidth;
 half      _OutlineWidth;
-sampler2D _OutlineMask;
+Texture2D _OutlineMask;
 int       _VertexColorNormal;
 half      _AsOutlineUnlit;
 
-sampler2D _TransparentMask;
+Texture2D _TransparentMask;
 half      _TransparentLevel;
 
-sampler2D _EmissiveTex;
+Texture2D _EmissiveTex;
 float4    _EmissiveColor;
 
-int       _VRCLightVolumesOn;
-half      _VRCLightVolumesStrength;
+uint      _VRCLightVolumesOn;
 
 // [OpenLit] Properties for lighting
-float     _LightIntensity;
 int       _ReceiveShadow;
 
-float     _AsUnlit;
-float     _LightMinLimit;
-float     _LightMaxLimit;
 float     _BeforeExposureLimit;
-float     _MonochromeLighting;
 float     _AlphaBoostFA;
 float4    _LightDirectionOverride;
 //---
@@ -124,13 +112,23 @@ struct g2f
 struct v2f_shadow {
     V2F_SHADOW_CASTER;
     float2 uv : TEXCOORD1;
-    float4 screenPos : TEXCOORD2;
 };
+
+inline void FPT_UnpackOpenLitData(g2f i, out OpenLitLightDatas lightDatas)
+{
+    UnpackLightDatas(lightDatas, i.lightDatas);
+}
 
 inline half FPT_Alpha(float2 uv)
 {
-    return tex2D(_MainTex, uv).a * dot(tex2D(_TransparentMask, uv).rgb, half3(0.299h, 0.587h, 0.114h));
+    return tex2D(_MainTex, uv).a * dot(FPT_SAMPLE(_TransparentMask, uv).rgb, half3(0.299h, 0.587h, 0.114h));
 }
+
+inline half FPT_ReceiveAttenuation(half attenuation)
+{
+    return lerp(1.0h, attenuation, saturate(_ReceiveShadow));
+}
+
 g2f vert_base (appdata v)
 {
     g2f o;
@@ -172,4 +170,15 @@ g2f vert_main_pass(appdata v)
 
     return o;
 }
+
+inline half3 FPT_NormalWS(g2f i)
+{
+    half3 normalTS = UnpackScaleNormal(tex2D(_BumpMap, i.uv), _BumpScale);
+    return normalize(
+        normalize(i.tangent)  * normalTS.x +
+        normalize(i.binormal) * normalTS.y +
+        normalize(i.normalWS) * normalTS.z
+    );
+}
+
 #endif // FPT_CORE_INCLUDED
